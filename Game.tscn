@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://nhee58tvd4ck"]
+
+[ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
+[ext_resource type="PackedScene" uid="uid://101qen05c1pi" path="res://Tetromino.tscn" id="2_y4ci5"]
+[ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
+[ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
+
+[node name="Game" type="Node2D"]
+
+[node name="GameManager" type="Node2D" parent="."]
+position = Vector2(20, 0)
+script = ExtResource("1_f63gn")
+tetromino_scene = ExtResource("2_y4ci5")
+
+[node name="GridRenderer" parent="GameManager" instance=ExtResource("3_k6q5g")]
+
+[node name="GridManager" type="Node2D" parent="GameManager"]
+script = ExtResource("4_v4u0l")

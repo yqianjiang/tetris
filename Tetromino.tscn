@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://101qen05c1pi"]
+
+[ext_resource type="Script" path="res://scripts/Tetromino.gd" id="1_n7lj8"]
+[ext_resource type="Texture2D" uid="uid://b8qv62lx0iqtx" path="res://assets/block.png" id="1_obi2r"]
+
+[node name="Tetromino" type="Node2D"]
+position = Vector2(16, 16)
+script = ExtResource("1_n7lj8")
+
+[node name="Block1" type="Sprite2D" parent="."]
+texture = ExtResource("1_obi2r")
+
+[node name="Block2" type="Sprite2D" parent="."]
+position = Vector2(0, 32)
+texture = ExtResource("1_obi2r")
+
+[node name="Block3" type="Sprite2D" parent="."]
+position = Vector2(0, 64)
+texture = ExtResource("1_obi2r")
+
+[node name="Block4" type="Sprite2D" parent="."]
+position = Vector2(0, 96)
+texture = ExtResource("1_obi2r")
