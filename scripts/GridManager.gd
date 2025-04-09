@@ -5,8 +5,6 @@ signal grid_updated
 const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 
-const TILE_INDEX = 6  # 贴图索引
-
 var grid = [] # 用于存储方块状态的二维数组
 
 func _ready():

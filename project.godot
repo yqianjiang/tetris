@@ -13,18 +13,23 @@ config_version=5
 config/name="Tetris"
 run/main_scene="res://Game.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
+boot_splash/bg_color=Color(0.113725, 0.156863, 0.235294, 1)
 config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=360
-window/size/viewport_height=680
+window/size/viewport_width=1242
+window/size/viewport_height=1950
 window/stretch/mode="canvas_items"
 
 [editor]
 
 naming/scene_name_casing=1
 naming/script_name_casing=1
+
+[gui]
+
+theme/custom_font="res://assets/fonts/思源宋体 Regular字体.ttf"
 
 [input]
 
@@ -46,3 +51,4 @@ ui_right={
 [rendering]
 
 renderer/rendering_method="mobile"
+environment/defaults/default_clear_color=Color(0.113725, 0.156863, 0.235294, 1)

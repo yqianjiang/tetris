@@ -1,27 +1,28 @@
-extends Node2D
+extends TileMap
 
-const CELL_SIZE = 32  # 确保使用正确的格子大小
+# 瓦片类型常量
+const TILE_OCCUPIED := 0
+const TILE_EMPTY := 1
 
 var grid_manager: Node2D  # 引用 GridManager
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	pass
 
-func _draw():
+func _on_grid_updated():
 	render_grid()
 
-func _on_grid_updated():
-	queue_redraw()
-
 func render_grid():
-	# 遍历 grid_manager 的 grid 数组
-	for y in range(grid_manager.GRID_HEIGHT):
-		for x in range(grid_manager.GRID_WIDTH):
-			var rect = Rect2(Vector2(x, y) * CELL_SIZE, Vector2(CELL_SIZE, CELL_SIZE))
-			if grid_manager.grid[y][x] != 0:
-				draw_rect(rect, Color(0.2, 0.2, 0.2))  # 绘制已占据的格子
-			else:
-				draw_rect(rect, Color(0.8, 0.8, 0.8))  # 绘制空白格子
-			# 绘制黑色边框
-			draw_rect(rect, Color(0.6, 0.6, 0.6), false, 1)
+		# 清除当前的所有瓦片
+		clear()
+		
+		# 遍历 grid_manager 的 grid 数组
+		for y in range(grid_manager.GRID_HEIGHT):
+				for x in range(grid_manager.GRID_WIDTH):
+						var tile_index = TILE_EMPTY  # 默认为空白格子
+						
+						if grid_manager.grid[y][x] != 0:
+								tile_index = TILE_OCCUPIED  # 占据的格子
+						
+						# 设置瓦片
+						set_cell(0, Vector2i(x, y), tile_index, Vector2i(0, 0))

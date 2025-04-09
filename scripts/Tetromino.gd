@@ -1,5 +1,7 @@
 extends Node2D
 
+const CELL_SIZE = 87  # 确保使用正确的格子大小
+
 signal tetromino_locked
 signal game_over
 
@@ -13,10 +15,10 @@ const TETROMINO_SHAPES = [
 	[Vector2(0, 0), Vector2(-1, 0), Vector2(-1, -1), Vector2(-2, -1)] # Z 形
 ]
 
-var grid_manager: Node2D  # 引用 GridManager
+var grid_manager: Node2D # 引用 GridManager
 
 # 新增一个 grid_position，用于存储基于网格坐标的当前位置
-var grid_position = Vector2(4, 0)  # 例如初始位置
+var grid_position = Vector2(4, 0) # 例如初始位置
 
 # 记录每个方块相对于 Tetromino 的局部网格偏移，相对于 grid_position
 var local_blocks = [
@@ -34,8 +36,16 @@ var left_hold_timer := 0.0
 var right_hold_timer := 0.0
 var down_hold_timer := 0.0
 
-const INITIAL_DELAY = 0.1  # 初始延迟
-const REPEAT_INTERVAL = 0.05  # 重复间隔
+const INITIAL_DELAY = 0.1 # 初始延迟
+const REPEAT_INTERVAL = 0.05 # 重复间隔
+
+# 触摸相关变量
+var touch_start_position = Vector2.ZERO
+var is_touching = false
+var swipe_threshold = 30 # 滑动触发阈值（像素）
+var tap_threshold = 10 # 点击的最大移动距离
+var touch_start_time = 0 # 触摸开始时间
+var tap_time_threshold = 0.2 # 点击的最大持续时间(秒)
 
 func _ready():
 	randomize()
@@ -58,7 +68,7 @@ func update_visual_position():
 	for i in range(get_child_count()):
 		var block = get_child(i)
 		# 将 grid 坐标转换为实际像素位置
-		block.position = (grid_position + local_blocks[i]) * 32
+		block.position = (grid_position + local_blocks[i]) * CELL_SIZE
 
 # 每帧更新
 func _process(delta):
@@ -108,7 +118,7 @@ func _process(delta):
 
 # 下落
 func move_down():
-	if can_move_to(Vector2(0, 1)):  # 注意这里传入的是 grid 单位
+	if can_move_to(Vector2(0, 1)): # 注意这里传入的是 grid 单位
 		grid_position.y += 1
 		update_visual_position()
 	else:
@@ -144,7 +154,7 @@ func rotate_tetromino():
 	for local in rotated:
 		var cell = grid_position + local
 		if not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
-			return  # 如果发生碰撞或超出边界，则取消旋转
+			return # 如果发生碰撞或超出边界，则取消旋转
 
 	local_blocks = rotated
 	update_visual_position()
@@ -170,3 +180,51 @@ func lock_tetromino():
 	for y in range(grid_manager.GRID_HEIGHT):
 		if grid_manager.is_full_line(y):
 			grid_manager.clear_line(y)
+
+# 处理输入事件
+func _input(event):
+	# 处理触摸事件
+	if event is InputEventScreenTouch:
+			if event.pressed:
+					# 触摸开始
+					touch_start_position = event.position
+					is_touching = true
+					touch_start_time = Time.get_ticks_msec() / 1000.0
+			else:
+					# 触摸结束，检测是点击还是滑动
+					is_touching = false
+					var touch_duration = Time.get_ticks_msec() / 1000.0 - touch_start_time
+					var touch_distance = (event.position - touch_start_position).length()
+					
+					# 如果是快速点击，则旋转方块
+					if touch_duration < tap_time_threshold and touch_distance < tap_threshold:
+							rotate_tetromino()
+					# 否则处理滑动
+					else:
+							handle_swipe(event.position)
+	
+	# 处理拖动事件
+	elif event is InputEventScreenDrag:
+			# 在拖动过程中实时响应下滑加速
+			var drag_direction = event.position - touch_start_position
+			if drag_direction.y > swipe_threshold and abs(drag_direction.x) < abs(drag_direction.y):
+					# 下滑操作立即加速下落
+					move_down()
+					touch_start_position = event.position # 更新起始位置以避免连续触发
+
+# 处理滑动手势
+func handle_swipe(end_position):
+	var swipe_direction = end_position - touch_start_position
+	
+	# 水平滑动距离大于垂直滑动距离，且超过阈值
+	if abs(swipe_direction.x) > abs(swipe_direction.y) and abs(swipe_direction.x) > swipe_threshold:
+			if swipe_direction.x > 0:
+					move_right()
+			else:
+					move_left()
+	# 垂直向下滑动且超过阈值
+	elif swipe_direction.y > swipe_threshold and abs(swipe_direction.x) < abs(swipe_direction.y):
+			# 处理下滑（已在拖动时处理，这里可以增加额外效果如极速下落）
+			var distance = int(swipe_direction.y / swipe_threshold)
+			for i in range(min(distance, 5)): # 限制最大连续下落次数
+					move_down()

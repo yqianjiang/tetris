@@ -2,7 +2,7 @@ extends Node2D
 
 @export var tetromino_scene: PackedScene
 @onready var grid_manager = $GridManager  # 获取 GridManager 节点
-@onready var grid_renderer = $GridRenderer  # 获取 GridRenderer 节点
+@onready var grid_renderer = $GridRenderer/TileMap  # 获取 GridRenderer 节点
 
 func _ready():
 	spawn_new_tetromino()

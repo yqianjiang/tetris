@@ -1,14 +1,42 @@
-[gd_scene load_steps=5 format=3 uid="uid://nhee58tvd4ck"]
+[gd_scene load_steps=7 format=3 uid="uid://nhee58tvd4ck"]
 
 [ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
+[ext_resource type="Script" path="res://scripts/TouchPanel.gd" id="1_lbv4k"]
+[ext_resource type="Texture2D" uid="uid://da0o21duxnlvc" path="res://assets/web_theme/bg_en.png" id="1_woq6b"]
 [ext_resource type="PackedScene" uid="uid://101qen05c1pi" path="res://Tetromino.tscn" id="2_y4ci5"]
 [ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
 [ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
 
 [node name="Game" type="Node2D"]
 
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(621, 975)
+texture = ExtResource("1_woq6b")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TouchPanel" type="ColorRect" parent="Control"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 19.025
+anchor_top = 25.812
+anchor_right = 19.025
+anchor_bottom = 25.812
+offset_left = -455.0
+offset_top = -890.48
+offset_right = 451.0
+offset_bottom = 890.52
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.113725, 0.156863, 0.235294, 1)
+script = ExtResource("1_lbv4k")
+
 [node name="GameManager" type="Node2D" parent="."]
-position = Vector2(20, 0)
+position = Vector2(324, 154)
 script = ExtResource("1_f63gn")
 tetromino_scene = ExtResource("2_y4ci5")
 
