@@ -30,7 +30,7 @@ var local_blocks = [
 	Vector2(-2, 0)
 ]
 
-var fall_time = 0.5 # 下落间隔，数字越小下落越快
+var fall_time = 1 # 下落间隔，数字越小下落越快
 var last_fall_time = 0
 
 # 增加计时器变量用于键盘输入重复控制
@@ -49,7 +49,7 @@ var tap_threshold = 10 # 点击的最大移动距离
 var touch_start_time = 0 # 触摸开始时间
 var tap_time_threshold = 0.2 # 点击的最大持续时间(秒)
 var last_horizontal_move_time = 0 # 上次水平移动的时间
-var horizontal_move_delay = 0.1 # 水平移动的间隔时间(秒)
+var horizontal_move_delay = 0.25 # 水平移动的间隔时间(秒)
 var last_horizontal_position = Vector2.ZERO # 上次水平移动时的位置
 var horizontal_move_threshold = 15 # 每次水平移动的最小阈值
 # 添加旋转控制变量

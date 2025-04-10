@@ -90,6 +90,7 @@ layout_mode = 0
 offset_top = 1053.0
 offset_right = 100.0
 offset_bottom = 1108.0
+scale = Vector2(1.5, 1.5)
 text = "暂停"
 
 [node name="PauseMenu" type="Panel" parent="GameManager/UI"]
