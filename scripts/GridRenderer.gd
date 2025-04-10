@@ -34,7 +34,6 @@ func _on_lines_to_clear(lines):
 	is_blinking = true
 	blink_timer = 0
 	blink_count = 0
-	print("开始闪烁行: ", lines_to_blink)
 	render_grid()  # 立即更新显示
 
 func render_grid():

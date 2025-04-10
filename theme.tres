@@ -1,10 +1,34 @@
-[gd_resource type="Theme" load_steps=2 format=3 uid="uid://4dhs5hvwry2w"]
+[gd_resource type="Theme" load_steps=5 format=3 uid="uid://4dhs5hvwry2w"]
 
 [ext_resource type="FontFile" uid="uid://dhdig0bwan41l" path="res://assets/fonts/思源宋体 Regular字体.ttf" id="1_x54js"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5m0kl"]
+bg_color = Color(0.239216, 0.294118, 0.376471, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4cqgc"]
+bg_color = Color(0.196078, 0.254902, 0.345098, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqa7p"]
+bg_color = Color(0.239216, 0.294118, 0.376471, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [resource]
 default_font = ExtResource("1_x54js")
 default_font_size = 32
+Button/styles/hover = SubResource("StyleBoxFlat_5m0kl")
+Button/styles/normal = SubResource("StyleBoxFlat_4cqgc")
+Button/styles/pressed = SubResource("StyleBoxFlat_pqa7p")
 Label/colors/font_color = Color(0, 0.827451, 0.94902, 1)
 Label/colors/font_outline_color = Color(0, 0.827451, 0.94902, 1)
 Label/colors/font_shadow_color = Color(0, 0, 0, 0)

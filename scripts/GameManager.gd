@@ -5,6 +5,8 @@ extends Node2D
 @onready var grid_renderer = $GridRenderer/TileMap  # 获取 GridRenderer 节点
 @onready var score_label = $UI/ScoreLabel  # 获取 ScoreLabel 节点
 @onready var lines_label = $UI/LinesLabel  # 获取 LinesLabel 节点
+@onready var pause_menu = $UI/PauseMenu  # 获取暂停菜单
+@onready var pause_button = $UI/PauseButton  # 获取暂停按钮
 
 # 添加分数和消除行数变量
 var score = 0
@@ -12,6 +14,8 @@ var lines_cleared = 0
 
 # 添加一个变量来跟踪当前是否有活动的方块
 var has_active_tetromino = false
+# 添加游戏暂停状态变量
+var game_paused = false
 
 func _ready():
 	spawn_new_tetromino()
@@ -22,11 +26,55 @@ func _ready():
 	
 	# 初始化UI显示
 	update_score_display()
+	
+	# 连接暂停按钮信号
+	pause_button.pressed.connect(toggle_pause)
+	$UI/PauseMenu/VBoxContainer/ResumeButton.pressed.connect(resume_game)
+	$UI/PauseMenu/VBoxContainer/ExitButton.pressed.connect(exit_game)
+
+# 添加输入处理函数
+func _input(event):
+	if event.is_action_pressed("ui_cancel"):  # ESC键
+		toggle_pause()
+
+# 暂停/继续游戏切换函数
+func toggle_pause():
+	if game_paused:
+		resume_game()
+	else:
+		pause_game()
+
+# 暂停游戏
+func pause_game():
+	if not game_paused:
+		game_paused = true
+		get_tree().paused = true
+		show_pause_ui()
+
+# 继续游戏
+func resume_game():
+	if game_paused:
+		game_paused = false
+		get_tree().paused = false
+		hide_pause_ui()
+
+# 退出游戏
+func exit_game():
+	get_tree().quit()
+
+# 显示暂停UI
+func show_pause_ui():
+	if pause_menu:
+		pause_menu.visible = true
+
+# 隐藏暂停UI
+func hide_pause_ui():
+	if pause_menu:
+		pause_menu.visible = false
 
 func spawn_new_tetromino():
 	# 如果已经有一个活动的方块，则不创建新的
 	if has_active_tetromino:
-		print("已有活动方块，不创建新方块")
 		return
 		
 	var new_tetromino = tetromino_scene.instantiate()
