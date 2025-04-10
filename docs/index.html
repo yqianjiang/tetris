@@ -28,7 +28,7 @@
             body {
                 margin: 0;
                 padding: 0;
-                background-color: #222;
+                background-color: #1D283C;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -42,10 +42,54 @@
             .game-info {
                 display: none;
             }
+            #loading-screen {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            #loading-screen img {
+                width: 150px;
+                height: auto;
+                margin-bottom: 20px;
+            }
+            .progress-wrapper {
+                position: relative;
+                width: 140px;
+                height: 8px;
+                border-radius: 16px;
+                background-color: #38475E;
+            }
+            #progress-bar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 0;
+                height: 100%;
+                display: block;
+                height: 100%;
+                border-radius: 16px;
+                background-color: #00D3F2;
+                transition: width 0.5s;
+            }
         </style>
     </head>
     <body>
         <canvas id="canvas"></canvas>
+
+        <div id="loading-screen">
+            <img src="index.180x180.png" />
+            <div class="progress-wrapper">
+                <div id="progress-bar"></div>
+            </div>
+          </div>
         
         <!-- Content visible to search engines but hidden from users -->
         <div class="game-info">
@@ -71,8 +115,15 @@
         
         <script src="index.js"></script>
         <script>
-            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17513392,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
-            engine.startGame();
+            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17584208,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
+            engine.startGame({
+                onProgress: function(current, total) {
+                    var progress = (current / total) * 100;
+                    document.getElementById("progress-bar").style.width = progress + "%";
+                }
+            }).then(()=>{
+                document.getElementById("loading-screen").style.display = "none";
+            })
         </script>
         
         <!-- Structured Data -->

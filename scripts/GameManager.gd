@@ -10,6 +10,9 @@ extends Node2D
 var score = 0
 var lines_cleared = 0
 
+# 添加一个变量来跟踪当前是否有活动的方块
+var has_active_tetromino = false
+
 func _ready():
 	spawn_new_tetromino()
 	grid_renderer.grid_manager = grid_manager  # 将 GridManager 传递给 GridRenderer
@@ -20,6 +23,11 @@ func _ready():
 	update_score_display()
 
 func spawn_new_tetromino():
+	# 如果已经有一个活动的方块，则不创建新的
+	if has_active_tetromino:
+		print("已有活动方块，不创建新方块")
+		return
+		
 	var new_tetromino = tetromino_scene.instantiate()
 	new_tetromino.grid_manager = grid_manager  # 将 GridManager 传递给方块
 	new_tetromino.connect("tetromino_locked", Callable(self, "_on_tetromino_locked"))
@@ -27,11 +35,21 @@ func spawn_new_tetromino():
 	new_tetromino.connect("lines_cleared", Callable(self, "_on_lines_cleared"))
 	new_tetromino.connect("piece_dropped", Callable(self, "_on_piece_dropped"))
 	add_child(new_tetromino)
+	
+	# 设置活动方块标志
+	has_active_tetromino = true
 
 func _on_tetromino_locked():
-	spawn_new_tetromino()
+	# 重置活动方块标志，表示当前没有活动方块
+	has_active_tetromino = false
+	
+	# 使用延时调用来避免同一帧内处理多个事件
+	call_deferred("spawn_new_tetromino")
 
 func _on_game_over():
+	# 重置活动方块标志
+	has_active_tetromino = false
+	
 	print("游戏结束")
 	print("最终得分: %d, 消除行数: %d" % [score, lines_cleared])
 	get_tree().paused = true  # 暂停游戏，或者执行其他游戏结束逻辑

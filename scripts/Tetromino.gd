@@ -138,9 +138,11 @@ func move_down():
 		grid_position.y += 1
 		update_visual_position()
 	else:
+		# 发送下落高度信号（即使没消行，下落也有少量得分）
+		var drop_height = 5
+		emit_signal("piece_dropped", drop_height)
 		lock_tetromino()
 		queue_free()
-		emit_signal("tetromino_locked")
 
 # 左移
 func move_left():
@@ -189,27 +191,6 @@ func can_move_to(offset: Vector2) -> bool:
 
 # 锁定方块
 func lock_tetromino():
-	# 计算方块下落高度（用于计算下落得分）
-	var drop_height = 0
-	var temp_position = grid_position
-	
-	# 从当前位置开始，计算方块可以下落多少格
-	while true:
-		temp_position.y += 1
-		var can_move = true
-		
-		# 检查每一个方块是否可以继续下移
-		for local in local_blocks:
-			var cell = temp_position + local
-			if not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
-				can_move = false
-				break
-		
-		if can_move:
-			drop_height += 1
-		else:
-			break
-	
 	# 将方块存入网格
 	for local in local_blocks:
 		var cell = grid_position + local
@@ -226,8 +207,7 @@ func lock_tetromino():
 	if cleared_lines > 0:
 		emit_signal("lines_cleared", cleared_lines)
 	
-	# 发送下落高度信号（即使没消行，下落也有少量得分）
-	emit_signal("piece_dropped", drop_height)
+	emit_signal("tetromino_locked")
 
 # 硬降（直接落到底部）
 func hard_drop():
@@ -246,7 +226,6 @@ func hard_drop():
 	# 锁定方块
 	lock_tetromino()
 	queue_free()
-	emit_signal("tetromino_locked")
 
 # 处理输入事件
 func _input(event):

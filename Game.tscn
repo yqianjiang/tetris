@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://nhee58tvd4ck"]
+[gd_scene load_steps=8 format=3 uid="uid://nhee58tvd4ck"]
 
 [ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
 [ext_resource type="Script" path="res://scripts/TouchPanel.gd" id="1_lbv4k"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://101qen05c1pi" path="res://Tetromino.tscn" id="2_y4ci5"]
 [ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
 [ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
+[ext_resource type="Theme" uid="uid://4dhs5hvwry2w" path="res://theme.tres" id="7_81wak"]
 
 [node name="Game" type="Node2D"]
 
@@ -58,6 +59,7 @@ layout_mode = 0
 offset_top = 82.0
 offset_right = 250.0
 offset_bottom = 132.0
+theme = ExtResource("7_81wak")
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
@@ -69,6 +71,7 @@ layout_mode = 0
 offset_top = 290.0
 offset_right = 250.0
 offset_bottom = 340.0
+theme = ExtResource("7_81wak")
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
