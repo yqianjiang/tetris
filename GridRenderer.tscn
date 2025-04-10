@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://2723frmpolwu"]
+[gd_scene load_steps=9 format=3 uid="uid://2723frmpolwu"]
 
 [ext_resource type="Script" path="res://scripts/GridRenderer.gd" id="1_bmkqg"]
 [ext_resource type="Texture2D" uid="uid://671seb3hehnd" path="res://assets/web_theme/grid.png" id="2_6pqcn"]
 [ext_resource type="Texture2D" uid="uid://b2xpl7hbiyebj" path="res://assets/web_theme/block.png" id="3_5yep3"]
+[ext_resource type="Texture2D" uid="uid://dg86ffldkxqjj" path="res://assets/web_theme/block_blink.png" id="3_wg2nm"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_x25fx"]
 texture = ExtResource("3_5yep3")
@@ -14,10 +15,16 @@ texture = ExtResource("2_6pqcn")
 texture_region_size = Vector2i(81, 81)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fdcrk"]
+texture = ExtResource("3_wg2nm")
+texture_region_size = Vector2i(81, 81)
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_bwcsr"]
 tile_size = Vector2i(87, 87)
 sources/0 = SubResource("TileSetAtlasSource_x25fx")
 sources/1 = SubResource("TileSetAtlasSource_65qvl")
+sources/2 = SubResource("TileSetAtlasSource_fdcrk")
 
 [node name="GridRenderer" type="Node2D"]
 

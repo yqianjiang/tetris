@@ -1,11 +1,13 @@
 extends Node2D
 
 signal grid_updated
+signal lines_to_clear(lines) # 新增信号，用于通知有行要被清除
 
 const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 
 var grid = [] # 用于存储方块状态的二维数组
+var lines_pending_clear = [] # 新增：存储待清除的行
 
 func _ready():
 	# 初始化网格
@@ -35,12 +37,34 @@ func is_full_line(y: int) -> bool:
 			return false
 	return true
 
+# 标记要清除的行
+func mark_lines_to_clear():
+	lines_pending_clear.clear()
+	for y in range(GRID_HEIGHT):
+		if is_full_line(y):
+			lines_pending_clear.append(y)
+	
+	if lines_pending_clear.size() > 0:
+		emit_signal("lines_to_clear", lines_pending_clear)
+		return true
+	return false
+
 # 清除整行并让上方方块下移
 func clear_line(y: int):
 	for x in range(GRID_WIDTH):
 		if grid[y][x] != 0:
 			grid[y][x] = 0
-	move_down_rows(y)
+
+# 清除所有标记的行
+func clear_marked_lines():
+	# 从上往下清除，以免影响索引
+	lines_pending_clear.sort()
+	
+	for y in lines_pending_clear:
+		clear_line(y)
+		move_down_rows(y)
+
+	lines_pending_clear.clear()
 	emit_signal("grid_updated")
 
 # 让上方的方块下移

@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://nhee58tvd4ck"]
+[gd_scene load_steps=9 format=3 uid="uid://nhee58tvd4ck"]
 
 [ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
 [ext_resource type="Script" path="res://scripts/TouchPanel.gd" id="1_lbv4k"]
 [ext_resource type="Texture2D" uid="uid://da0o21duxnlvc" path="res://assets/web_theme/bg_en.png" id="1_woq6b"]
+[ext_resource type="Texture2D" uid="uid://c8fo5ftncwq7g" path="res://assets/web_theme/bg.png" id="2_h0rl6"]
 [ext_resource type="PackedScene" uid="uid://101qen05c1pi" path="res://Tetromino.tscn" id="2_y4ci5"]
 [ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
 [ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
@@ -13,6 +14,11 @@
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(621, 975)
 texture = ExtResource("1_woq6b")
+
+[node name="Sprite2D2" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(621, 975)
+texture = ExtResource("2_h0rl6")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
@@ -53,27 +59,28 @@ offset_left = -276.0
 offset_top = 23.0
 offset_right = -13.0
 offset_bottom = 615.0
+theme = ExtResource("7_81wak")
 
 [node name="ScoreLabel" type="Label" parent="GameManager/UI"]
 layout_mode = 0
-offset_top = 82.0
-offset_right = 250.0
-offset_bottom = 132.0
-theme = ExtResource("7_81wak")
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 32
-text = "0"
+offset_top = 67.0
+offset_right = 129.0
+offset_bottom = 137.0
+scale = Vector2(1.5, 1.5)
+text = "12480"
 
 [node name="LinesLabel" type="Label" parent="GameManager/UI"]
 layout_mode = 0
-offset_top = 290.0
-offset_right = 250.0
+offset_top = 270.0
+offset_right = 52.0
 offset_bottom = 340.0
-theme = ExtResource("7_81wak")
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 32
-text = "0"
+scale = Vector2(1.5, 1.5)
+text = "12"
+
+[node name="LevelLabel" type="Label" parent="GameManager/UI"]
+layout_mode = 0
+offset_top = 472.0
+offset_right = 52.0
+offset_bottom = 542.0
+scale = Vector2(1.5, 1.5)
+text = "1"

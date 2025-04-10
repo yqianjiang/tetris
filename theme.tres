@@ -1,5 +1,16 @@
-[gd_resource type="Theme" format=3 uid="uid://4dhs5hvwry2w"]
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://4dhs5hvwry2w"]
+
+[ext_resource type="FontFile" uid="uid://dhdig0bwan41l" path="res://assets/fonts/思源宋体 Regular字体.ttf" id="1_x54js"]
 
 [resource]
+default_font = ExtResource("1_x54js")
+default_font_size = 32
 Label/colors/font_color = Color(0, 0.827451, 0.94902, 1)
+Label/colors/font_outline_color = Color(0, 0.827451, 0.94902, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 3
+Label/constants/outline_size = 3
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/constants/shadow_outline_size = 1
 Label/font_sizes/font_size = 36

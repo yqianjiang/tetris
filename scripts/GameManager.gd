@@ -18,6 +18,7 @@ func _ready():
 	grid_renderer.grid_manager = grid_manager  # 将 GridManager 传递给 GridRenderer
 	# 连接 grid_manager 的 grid_updated 信号
 	grid_manager.connect("grid_updated", Callable(grid_renderer, "_on_grid_updated"))
+	grid_manager.connect("lines_to_clear", Callable(grid_renderer, "_on_lines_to_clear"))
 	
 	# 初始化UI显示
 	update_score_display()

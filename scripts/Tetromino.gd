@@ -198,14 +198,11 @@ func lock_tetromino():
 	
 	# 检查是否有满行并计算消除的行数
 	var cleared_lines = 0
-	for y in range(grid_manager.GRID_HEIGHT):
-		if grid_manager.is_full_line(y):
-			grid_manager.clear_line(y)
-			cleared_lines += 1
-	
-	# 发出信号通知消除的行数和下落高度
-	if cleared_lines > 0:
-		emit_signal("lines_cleared", cleared_lines)
+	if grid_manager.mark_lines_to_clear():  # 使用新方法标记要清除的行
+		cleared_lines = grid_manager.lines_pending_clear.size()
+		# 发出信号通知消除的行数
+		if cleared_lines > 0:
+			emit_signal("lines_cleared", cleared_lines)
 	
 	emit_signal("tetromino_locked")
 
