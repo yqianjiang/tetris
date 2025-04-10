@@ -238,15 +238,9 @@ func _input(event):
 			else:
 					# 触摸结束，检测是点击还是滑动
 					is_touching = false
-					var touch_duration = Time.get_ticks_msec() / 1000.0 - touch_start_time
-					var touch_distance = (event.position - touch_start_position).length()
 					
-					# 如果是快速点击且不在下滑状态，才旋转方块
-					if touch_duration < tap_time_threshold and touch_distance < tap_threshold and not is_swiping_down:
-							rotate_tetromino()
-					# 否则处理滑动
-					else:
-							handle_swipe(event.position)
+					# TODO: 暂时不支持点击旋转，因为太容易误触了
+					handle_swipe(event.position)
 					
 					# 重置下滑状态
 					is_swiping_down = false
