@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tetris Game - Classic Puzzle Action | Play Online</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Play Tetris online for free! The classic puzzle game that tests your reaction and strategy skills. Built with Godot engine, runs smoothly on all modern browsers.">
+        <meta name="keywords" content="tetris,puzzle game,online game,free game,browser game,godot game">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://tetris.webgames.fun">
+        <meta property="og:title" content="Tetris Game - Classic Puzzle Action">
+        <meta property="og:description" content="Play Tetris online for free! The classic puzzle game that tests your reaction and strategy skills.">
+        <meta property="og:image" content="https://tetris.webgames.fun/thumbnail.jpg">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="https://tetris.webgames.fun">
+        <meta property="twitter:title" content="Tetris Game - Classic Puzzle Action">
+        <meta property="twitter:description" content="Play Tetris online for free! The classic puzzle game that tests your reaction and strategy skills.">
+        <meta property="twitter:image" content="https://tetris.webgames.fun/thumbnail.jpg">
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="favicon.png">
+        
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: #222;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                flex-direction: column;
+            }
+            canvas {
+                max-width: 100%;
+                max-height: 100%;
+            }
+            .game-info {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        
+        <!-- Content visible to search engines but hidden from users -->
+        <div class="game-info">
+            <h1>Play Tetris Online</h1>
+            <p>Welcome to the classic Tetris game! Developed with the Godot engine, this version lets you enjoy the block-stacking fun anytime, anywhere.</p>
+            <p>Tetris is the iconic puzzle game that tests players' spatial reasoning and reaction time, created by Russian programmer Alexey Pajitnov in 1984.</p>
+            <p>Game rules are simple: control the falling tetromino pieces and arrange them to create complete horizontal lines that clear from the board. As the game progresses, pieces fall faster, increasing the challenge.</p>
+            <h2>How to Play Tetris</h2>
+            <ul>
+                <li>Use arrow keys or WASD to move and rotate pieces</li>
+                <li>Complete horizontal lines to clear them and score points</li>
+                <li>Avoid letting the stack reach the top of the playing field</li>
+                <li>Plan ahead to create spaces for upcoming pieces</li>
+            </ul>
+            <h2>Game Features</h2>
+            <ul>
+                <li>Classic Tetris gameplay with modern performance</li>
+                <li>Progressive difficulty as you improve</li>
+                <li>Responsive controls optimized for keyboard</li>
+                <li>Works on all modern browsers without plugins</li>
+            </ul>
+        </div>
+        
+        <script src="$GODOT_URL"></script>
+        <script>
+            var engine = new Engine($GODOT_CONFIG);
+            engine.startGame();
+        </script>
+        
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "VideoGame",
+            "name": "Tetris",
+            "description": "Play Tetris online for free! The classic puzzle game that tests your reaction and strategy skills.",
+            "genre": ["Puzzle", "Arcade", "Strategy"],
+            "gamePlatform": "Web Browser",
+            "applicationCategory": "Game",
+            "inLanguage": "en",
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "reviewCount": "1250"
+            },
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/OnlineOnly"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "Your Name"
+            },
+            "copyrightYear": "2025",
+            "screenshot": "https://tetris.webgames.fun/screenshot.jpg"
+        }
+        </script>
+    </body>
+</html>

@@ -4,6 +4,8 @@ const CELL_SIZE = 87  # 确保使用正确的格子大小
 
 signal tetromino_locked
 signal game_over
+signal lines_cleared(count)
+signal piece_dropped(drop_height)
 
 const TETROMINO_SHAPES = [
 	[Vector2(0, 0), Vector2(1, 0), Vector2(-1, 0), Vector2(-2, 0)], # I 形
@@ -46,6 +48,16 @@ var swipe_threshold = 30 # 滑动触发阈值（像素）
 var tap_threshold = 10 # 点击的最大移动距离
 var touch_start_time = 0 # 触摸开始时间
 var tap_time_threshold = 0.2 # 点击的最大持续时间(秒)
+var last_horizontal_move_time = 0 # 上次水平移动的时间
+var horizontal_move_delay = 0.1 # 水平移动的间隔时间(秒)
+var last_horizontal_position = Vector2.ZERO # 上次水平移动时的位置
+var horizontal_move_threshold = 15 # 每次水平移动的最小阈值
+# 添加旋转控制变量
+var last_rotation_time = 0 # 上次旋转的时间
+var rotation_delay = 0.3 # 旋转操作的间隔时间(秒)
+
+# 在类开始处添加下滑状态变量
+var is_swiping_down = false
 
 func _ready():
 	randomize()
@@ -111,6 +123,10 @@ func _process(delta):
 	if Input.is_action_just_pressed("ui_up"):
 		rotate_tetromino()
 	
+	# 按空格键硬降（直接下落到最底部）
+	if Input.is_action_just_pressed("ui_select"):  # ui_select 对应空格键
+		hard_drop()
+	
 	# 自动下落
 	if last_fall_time >= fall_time:
 		move_down()
@@ -173,13 +189,64 @@ func can_move_to(offset: Vector2) -> bool:
 
 # 锁定方块
 func lock_tetromino():
+	# 计算方块下落高度（用于计算下落得分）
+	var drop_height = 0
+	var temp_position = grid_position
+	
+	# 从当前位置开始，计算方块可以下落多少格
+	while true:
+		temp_position.y += 1
+		var can_move = true
+		
+		# 检查每一个方块是否可以继续下移
+		for local in local_blocks:
+			var cell = temp_position + local
+			if not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
+				can_move = false
+				break
+		
+		if can_move:
+			drop_height += 1
+		else:
+			break
+	
+	# 将方块存入网格
 	for local in local_blocks:
 		var cell = grid_position + local
 		grid_manager.store_block(cell.x, cell.y, 1)
-	# 检查是否有满行
+	
+	# 检查是否有满行并计算消除的行数
+	var cleared_lines = 0
 	for y in range(grid_manager.GRID_HEIGHT):
 		if grid_manager.is_full_line(y):
 			grid_manager.clear_line(y)
+			cleared_lines += 1
+	
+	# 发出信号通知消除的行数和下落高度
+	if cleared_lines > 0:
+		emit_signal("lines_cleared", cleared_lines)
+	
+	# 发送下落高度信号（即使没消行，下落也有少量得分）
+	emit_signal("piece_dropped", drop_height)
+
+# 硬降（直接落到底部）
+func hard_drop():
+	var drop_height = 0
+	
+	# 找出可以下落的最大距离
+	while can_move_to(Vector2(0, 1)):
+		grid_position.y += 1
+		drop_height += 1
+	
+	update_visual_position()
+	
+	# 发出下落高度信号
+	emit_signal("piece_dropped", drop_height)
+	
+	# 锁定方块
+	lock_tetromino()
+	queue_free()
+	emit_signal("tetromino_locked")
 
 # 处理输入事件
 func _input(event):
@@ -188,43 +255,84 @@ func _input(event):
 			if event.pressed:
 					# 触摸开始
 					touch_start_position = event.position
+					last_horizontal_position = event.position
 					is_touching = true
 					touch_start_time = Time.get_ticks_msec() / 1000.0
+					last_horizontal_move_time = 0
 			else:
 					# 触摸结束，检测是点击还是滑动
 					is_touching = false
 					var touch_duration = Time.get_ticks_msec() / 1000.0 - touch_start_time
 					var touch_distance = (event.position - touch_start_position).length()
 					
-					# 如果是快速点击，则旋转方块
-					if touch_duration < tap_time_threshold and touch_distance < tap_threshold:
+					# 如果是快速点击且不在下滑状态，才旋转方块
+					if touch_duration < tap_time_threshold and touch_distance < tap_threshold and not is_swiping_down:
 							rotate_tetromino()
 					# 否则处理滑动
 					else:
 							handle_swipe(event.position)
+					
+					# 重置下滑状态
+					is_swiping_down = false
 	
 	# 处理拖动事件
-	elif event is InputEventScreenDrag:
-			# 在拖动过程中实时响应下滑加速
+	elif event is InputEventScreenDrag and is_touching:
+			var current_time = Time.get_ticks_msec() / 1000.0
 			var drag_direction = event.position - touch_start_position
-			if drag_direction.y > swipe_threshold and abs(drag_direction.x) < abs(drag_direction.y):
+			
+			# 处理垂直向上滑动(旋转方块)
+			if drag_direction.y < -swipe_threshold and abs(drag_direction.y) > abs(drag_direction.x):
+					# 添加时间间隔限制，避免连续快速旋转
+					if current_time - last_rotation_time > rotation_delay:
+							rotate_tetromino()
+							last_rotation_time = current_time
+							touch_start_position = event.position # 更新起始位置以避免连续触发
+			
+			# 处理垂直下滑
+			elif drag_direction.y > swipe_threshold and abs(drag_direction.x) < abs(drag_direction.y):
 					# 下滑操作立即加速下落
 					move_down()
 					touch_start_position = event.position # 更新起始位置以避免连续触发
+			
+			# 处理水平滑动
+			if abs(drag_direction.x) > abs(drag_direction.y):
+					# 计算与上次水平移动位置的差距
+					var horizontal_diff = abs(event.position.x - last_horizontal_position.x)
+					
+					# 检查是否已经过了延迟时间并且移动距离足够
+					if current_time - last_horizontal_move_time > horizontal_move_delay and horizontal_diff > horizontal_move_threshold:
+							if event.position.x > last_horizontal_position.x:
+									move_right()
+							else:
+									move_left()
+							
+							# 更新上次移动的时间和位置
+							last_horizontal_move_time = current_time
+							last_horizontal_position = event.position
 
 # 处理滑动手势
 func handle_swipe(end_position):
 	var swipe_direction = end_position - touch_start_position
+	var current_time = Time.get_ticks_msec() / 1000.0
+	
+	# 处理向上滑动(旋转)
+	if swipe_direction.y < -swipe_threshold and abs(swipe_direction.y) > abs(swipe_direction.x):
+			if current_time - last_rotation_time > rotation_delay:
+					rotate_tetromino()
+					last_rotation_time = current_time
 	
 	# 水平滑动距离大于垂直滑动距离，且超过阈值
-	if abs(swipe_direction.x) > abs(swipe_direction.y) and abs(swipe_direction.x) > swipe_threshold:
+	elif abs(swipe_direction.x) > abs(swipe_direction.y) and abs(swipe_direction.x) > swipe_threshold:
 			if swipe_direction.x > 0:
 					move_right()
 			else:
 					move_left()
+	
 	# 垂直向下滑动且超过阈值
 	elif swipe_direction.y > swipe_threshold and abs(swipe_direction.x) < abs(swipe_direction.y):
-			# 处理下滑（已在拖动时处理，这里可以增加额外效果如极速下落）
+			is_swiping_down = true
 			var distance = int(swipe_direction.y / swipe_threshold)
 			for i in range(min(distance, 5)): # 限制最大连续下落次数
 					move_down()
+	else:
+			is_swiping_down = false
