@@ -18,6 +18,7 @@ const TETROMINO_SHAPES = [
 ]
 
 var grid_manager: Node2D # 引用 GridManager
+var touch_input_handler: Node # 触摸输入处理器
 
 # 新增一个 grid_position，用于存储基于网格坐标的当前位置
 var grid_position = Vector2(4, 0) # 例如初始位置
@@ -42,27 +43,7 @@ var down_hold_timer := 0.0
 const INITIAL_DELAY = 0.1 # 初始延迟
 const REPEAT_INTERVAL = 0.05 # 重复间隔
 
-# 触摸相关变量
-var touch_start_position = Vector2.ZERO
-var is_touching = false
-var swipe_threshold = 40 # 滑动触发阈值（像素）- 增加阈值避免误触
-var tap_threshold = 10 # 点击的最大移动距离
-var touch_start_time = 0 # 触摸开始时间
-var tap_time_threshold = 0.2 # 点击的最大持续时间(秒)
-var last_horizontal_move_time = 0 # 上次水平移动的时间
-var horizontal_move_delay = 0.1 # 水平移动的间隔时间(秒) - 减少延迟提高响应速度
-var last_horizontal_position = Vector2.ZERO # 上次水平移动时的位置
-var horizontal_move_threshold = 10 # 每次水平移动的最小阈值 - 降低阈值提高灵敏度
-# 添加变量来跟踪移动状态
-var last_move_direction = Vector2.ZERO
-var has_moved_in_touch = false
-
-# 添加旋转控制变量
-var last_rotation_time = 0 # 上次旋转的时间
-var rotation_delay = 0.3 # 旋转操作的间隔时间(秒)
-
-# 在类开始处添加下滑状态变量
-var is_swiping_down = false
+var soft_drop_height = 0
 
 func _ready():
 	randomize()
@@ -79,15 +60,39 @@ func _ready():
 			queue_free() # 直接销毁这个方块
 			return
 
+	# 初始化触摸输入处理器
+	setup_touch_input_handler()
+	
 	update_visual_position()
+
+# 初始化触摸输入处理器
+func setup_touch_input_handler():
+	# 创建触摸输入处理器实例
+	touch_input_handler = load("res://scripts/TouchInputHandler.gd").new()
+	add_child(touch_input_handler)
+	
+	# 连接信号
+	touch_input_handler.connect("move_left", Callable(self, "move_left"))
+	touch_input_handler.connect("move_right", Callable(self, "move_right"))
+	touch_input_handler.connect("move_down", Callable(self, "soft_drop"))
+	touch_input_handler.connect("rotate", Callable(self, "rotate_tetromino"))
+	touch_input_handler.connect("hard_drop", Callable(self, "hard_drop"))
+
+# 执行软降
+func soft_drop():
+	move_down(true)
 
 # 刷新视觉位置
 func update_visual_position():
 	# 假设子节点个数与 local_blocks 数量一致
 	for i in range(get_child_count()):
 		var block = get_child(i)
+		# 跳过非方块节点（如触摸输入处理器）
+		if block.get_class() != "Sprite2D":
+			continue
 		# 将 grid 坐标转换为实际像素位置
-		block.position = (grid_position + local_blocks[i]) * CELL_SIZE
+		var index = min(i, local_blocks.size() - 1)
+		block.position = (grid_position + local_blocks[index]) * CELL_SIZE
 
 # 每帧更新
 func _process(delta):
@@ -121,7 +126,7 @@ func _process(delta):
 	if Input.is_action_pressed("ui_down"):
 		down_hold_timer += delta
 		if down_hold_timer >= INITIAL_DELAY:
-			move_down()
+			move_down(true)
 			down_hold_timer = 0.0
 	else:
 		down_hold_timer = 0.0
@@ -136,18 +141,18 @@ func _process(delta):
 	
 	# 自动下落
 	if last_fall_time >= fall_time:
-		move_down()
+		move_down(false)
 		last_fall_time = 0
 
 # 下落
-func move_down():
+func move_down(is_soft_drop: bool):
 	if can_move_to(Vector2(0, 1)): # 注意这里传入的是 grid 单位
 		grid_position.y += 1
 		update_visual_position()
+		# 软降时增加下落高度
+		if is_soft_drop:
+			soft_drop_height += 1
 	else:
-		# 发送下落高度信号（即使没消行，下落也有少量得分）
-		var drop_height = 5
-		emit_signal("piece_dropped", drop_height)
 		lock_tetromino()
 		queue_free()
 
@@ -162,7 +167,6 @@ func move_right():
 	if can_move_to(Vector2(1, 0)):
 		grid_position.x += 1
 		update_visual_position()
-
 
 # 旋转方块（顺时针 90°）
 func rotate_tetromino():
@@ -244,6 +248,10 @@ func lock_tetromino():
 		if cleared_lines > 0:
 			emit_signal("lines_cleared", cleared_lines)
 	
+	# 软降计分
+	emit_signal("piece_dropped", soft_drop_height)
+	soft_drop_height = 0 # 重置下落高度
+
 	emit_signal("tetromino_locked")
 	check_game_over()
 
@@ -267,116 +275,11 @@ func hard_drop():
 	update_visual_position()
 	
 	# 发出下落高度信号
-	emit_signal("piece_dropped", drop_height)
+	emit_signal("piece_dropped", drop_height * 2) # 硬降得分翻倍
 	
 	# 锁定方块
 	lock_tetromino()
 	queue_free()
-
-# 处理输入事件
-func _input(event):
-	# 处理触摸事件
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			# 触摸开始
-			touch_start_position = event.position
-			last_horizontal_position = event.position
-			is_touching = true
-			touch_start_time = Time.get_ticks_msec() / 1000.0
-			last_horizontal_move_time = 0
-			has_moved_in_touch = false # 重置移动状态
-			last_move_direction = Vector2.ZERO
-		else:
-			# 触摸结束
-			is_touching = false
-			
-			# 只有在拖动过程中没有移动时，才在释放时处理移动
-			if not has_moved_in_touch:
-				handle_swipe(event.position)
-			
-			# 重置下滑状态
-			is_swiping_down = false
-	
-	# 处理拖动事件
-	elif event is InputEventScreenDrag and is_touching:
-		var current_time = Time.get_ticks_msec() / 1000.0
-		var drag_direction = event.position - touch_start_position
-		
-		# 处理垂直向上滑动(旋转方块)
-		if drag_direction.y < -swipe_threshold and abs(drag_direction.y) > abs(drag_direction.x):
-			# 添加时间间隔限制，避免连续快速旋转
-			if current_time - last_rotation_time > rotation_delay:
-				rotate_tetromino()
-				last_rotation_time = current_time
-				touch_start_position = event.position # 更新起始位置以避免连续触发
-				has_moved_in_touch = true
-		
-		# 处理垂直下滑
-		elif drag_direction.y > swipe_threshold and abs(drag_direction.x) < abs(drag_direction.y):
-			# 下滑操作立即加速下落
-			move_down()
-			touch_start_position = event.position # 更新起始位置以避免连续触发
-			has_moved_in_touch = true
-		
-		# 处理水平滑动
-		elif abs(drag_direction.x) > abs(drag_direction.y):
-			# 计算与上次水平移动位置的差距
-			var horizontal_diff = abs(event.position.x - last_horizontal_position.x)
-			
-			# 检查是否已经过了延迟时间并且移动距离足够
-			var move_delay = horizontal_move_delay
-			# 长时间拖动时逐渐减少延迟，提升连续移动速度
-			if current_time - touch_start_time > 0.5:
-				move_delay *= 0.7
-			
-			if current_time - last_horizontal_move_time > move_delay and horizontal_diff > horizontal_move_threshold:
-				var new_direction = 1 if event.position.x > last_horizontal_position.x else -1
-				var last_direction = 1 if last_move_direction.x > 0 else -1 if last_move_direction.x < 0 else 0
-				
-				# 只有方向改变或者满足移动条件时才触发移动
-				if last_direction != new_direction or horizontal_diff > horizontal_move_threshold * 1.5:
-					if new_direction > 0:
-						move_right()
-					else:
-						move_left()
-					
-					# 更新上次移动的时间和位置
-					last_horizontal_move_time = current_time
-					last_horizontal_position = event.position
-					last_move_direction = Vector2(new_direction, 0)
-					has_moved_in_touch = true
-
-# 处理滑动手势
-func handle_swipe(end_position):
-	var swipe_direction = end_position - touch_start_position
-	var current_time = Time.get_ticks_msec() / 1000.0
-	var swipe_distance = swipe_direction.length()
-	
-	# 太短的滑动不处理，避免误触
-	if swipe_distance < swipe_threshold * 0.8:
-		return
-	
-	# 处理向上滑动(旋转)
-	if swipe_direction.y < -swipe_threshold and abs(swipe_direction.y) > abs(swipe_direction.x):
-		if current_time - last_rotation_time > rotation_delay:
-			rotate_tetromino()
-			last_rotation_time = current_time
-	
-	# 水平滑动距离大于垂直滑动距离，且超过阈值
-	elif abs(swipe_direction.x) > abs(swipe_direction.y) and abs(swipe_direction.x) > swipe_threshold:
-		if swipe_direction.x > 0:
-			move_right()
-		else:
-			move_left()
-	
-	# 垂直向下滑动且超过阈值
-	elif swipe_direction.y > swipe_threshold and abs(swipe_direction.x) < abs(swipe_direction.y):
-		is_swiping_down = true
-		var distance = int(swipe_direction.y / swipe_threshold)
-		for i in range(min(distance, 3)): # 减少最大连续下落次数，提高控制精度
-			move_down()
-	else:
-		is_swiping_down = false
 
 # 设置当前等级并调整下落速度
 func set_level(level):
@@ -390,4 +293,3 @@ func adjust_fall_time():
 
 	var new_fall_time = initial_fall_time / (1 + current_level * 0.3)
 	fall_time = max(min_fall_time, new_fall_time)
-	print("当前等级: %d, 下落时间: %.2f" % [current_level, fall_time])

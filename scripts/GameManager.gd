@@ -120,21 +120,19 @@ func _on_lines_cleared(count):
 	level = (lines_cleared / 10) + 1
 	
 	# 根据消除的行数计算得分，并乘以当前等级
-	# 经典俄罗斯方块得分规则: 1行=100, 2行=300, 3行=500, 4行=800
 	var line_score = 0
 	match count:
 		1: line_score = 100
 		2: line_score = 300
-		3: line_score = 500
-		4: line_score = 800  # 一次消4行（俄罗斯方块）
+		3: line_score = 700
+		4: line_score = 1500  # 一次消4行（俄罗斯方块）
 	
 	# 得分乘以当前等级
-	score += line_score * level
+	score += line_score * (level + 1)
 	update_score_display()
 
 # 处理方块下落得分
 func _on_piece_dropped(height):
-	# 下落得分通常很少，每下落一格得2分，乘以当前等级
 	score += height
 	update_score_display()
 
