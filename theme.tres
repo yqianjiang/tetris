@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=5 format=3 uid="uid://4dhs5hvwry2w"]
+[gd_resource type="Theme" load_steps=6 format=3 uid="uid://4dhs5hvwry2w"]
 
 [ext_resource type="FontFile" uid="uid://dhdig0bwan41l" path="res://assets/fonts/思源宋体 Regular字体.ttf" id="1_x54js"]
 
@@ -23,6 +23,13 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rkv7a"]
+bg_color = Color(0.196078, 0.254902, 0.345098, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [resource]
 default_font = ExtResource("1_x54js")
 default_font_size = 32
@@ -38,3 +45,4 @@ Label/constants/shadow_offset_x = 1
 Label/constants/shadow_offset_y = 1
 Label/constants/shadow_outline_size = 1
 Label/font_sizes/font_size = 36
+Panel/styles/panel = SubResource("StyleBoxFlat_rkv7a")

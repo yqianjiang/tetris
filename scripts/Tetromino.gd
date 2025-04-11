@@ -7,16 +7,6 @@ signal game_over
 signal lines_cleared(count)
 signal piece_dropped(drop_height)
 
-const TETROMINO_SHAPES = [
-	[Vector2(0, 0), Vector2(1, 0), Vector2(-1, 0), Vector2(-2, 0)], # I 形
-	[Vector2(0, 0), Vector2(1, 0), Vector2(-1, 0), Vector2(0, -1)], # T 形
-	[Vector2(0, 0), Vector2(1, 0), Vector2(-1, 0), Vector2(-1, -1)], # L 形
-	[Vector2(0, 0), Vector2(1, 0), Vector2(-1, 0), Vector2(1, -1)], # J 形
-	[Vector2(0, 0), Vector2(1, 0), Vector2(0, -1), Vector2(1, -1)], # O 形
-	[Vector2(0, 0), Vector2(1, 0), Vector2(1, -1), Vector2(2, -1)], # S 形
-	[Vector2(0, 0), Vector2(-1, 0), Vector2(-1, -1), Vector2(-2, -1)] # Z 形
-]
-
 var grid_manager: Node2D # 引用 GridManager
 var touch_input_handler: Node # 触摸输入处理器
 
@@ -47,8 +37,6 @@ var soft_drop_height = 0
 
 func _ready():
 	randomize()
-	var shape_index = randi() % TETROMINO_SHAPES.size()
-	local_blocks = TETROMINO_SHAPES[shape_index]
 	
 	# 根据当前等级调整下落速度
 	adjust_fall_time()
@@ -293,3 +281,11 @@ func adjust_fall_time():
 
 	var new_fall_time = initial_fall_time / (1 + current_level * 0.3)
 	fall_time = max(min_fall_time, new_fall_time)
+
+# 设置方块形状
+func set_shape(shape_index: int):
+	if shape_index >= 0 and shape_index < GameConstants.TETROMINO_SHAPES.size():
+		local_blocks = GameConstants.TETROMINO_SHAPES[shape_index].duplicate()
+		# 确保视觉元素更新
+		if is_inside_tree():
+			update_visual_position()

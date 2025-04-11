@@ -8,6 +8,7 @@ extends Node2D
 @onready var level_label = $UI/LevelLabel  # 获取 LevelLabel 节点
 @onready var pause_menu = $UI/PauseMenu  # 获取暂停菜单
 @onready var pause_button = $UI/PauseButton  # 获取暂停按钮
+@onready var next_piece_preview = $UI/NextPiecePreview  # 获取下一个方块预览区域
 
 # 添加分数和消除行数变量
 var score = 0
@@ -19,7 +20,13 @@ var has_active_tetromino = false
 # 添加游戏暂停状态变量
 var game_paused = false
 
+# 添加变量来存储下一个方块的形状索引
+var next_shape_index = 0
+
 func _ready():
+	# 初始化第一个下一个方块形状
+	generate_next_shape()
+	
 	spawn_new_tetromino()
 	grid_renderer.grid_manager = grid_manager  # 将 GridManager 传递给 GridRenderer
 	# 连接 grid_manager 的 grid_updated 信号
@@ -29,10 +36,41 @@ func _ready():
 	# 初始化UI显示
 	update_score_display()
 	
+	# 设置暂停菜单的z_index为较高值，确保它始终显示在最顶层
+	pause_menu.z_index = 5
+	
 	# 连接暂停按钮信号
 	pause_button.pressed.connect(toggle_pause)
 	$UI/PauseMenu/VBoxContainer/ResumeButton.pressed.connect(resume_game)
 	$UI/PauseMenu/VBoxContainer/ExitButton.pressed.connect(exit_game)
+
+# 生成下一个方块的形状
+func generate_next_shape():
+	randomize()
+	next_shape_index = randi() % GameConstants.TETROMINO_SHAPES_PREVIEW.size()
+	update_next_piece_preview()
+
+# 更新下一个方块的预览显示
+func update_next_piece_preview():
+	# 清除现有的预览
+	for child in next_piece_preview.get_children():
+		if child is Sprite2D:
+			child.queue_free()
+	
+	# 获取下一个形状并在预览区域显示
+	var next_shape = GameConstants.TETROMINO_SHAPES_PREVIEW[next_shape_index]
+	
+	# 为每个方块创建一个精灵
+	for block_pos in next_shape:
+		var block = Sprite2D.new()
+		block.texture = load("res://assets/web_theme/block.png")  # 假设有一个方块贴图
+		
+		# 调整预览区域中方块的位置
+		var offset = Vector2(1, 1)
+		block.position = (block_pos + offset) * 40  # 使用较小尺寸
+		block.scale = Vector2(0.45, 0.45)  # 缩小预览块的大小
+		
+		next_piece_preview.add_child(block)
 
 # 添加输入处理函数
 func _input(event):
@@ -90,10 +128,16 @@ func spawn_new_tetromino():
 	if "set_level" in new_tetromino:
 		new_tetromino.set_level(level)
 	
+	# 使用预先生成的下一个方块形状
+	new_tetromino.set_shape(next_shape_index)
+	
 	add_child(new_tetromino)
 	
 	# 设置活动方块标志
 	has_active_tetromino = true
+	
+	# 生成新的下一个方块形状
+	generate_next_shape()
 
 func _on_tetromino_locked():
 	# 重置活动方块标志，表示当前没有活动方块

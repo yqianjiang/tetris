@@ -58,7 +58,7 @@ anchors_preset = 0
 offset_left = -276.0
 offset_top = 23.0
 offset_right = -13.0
-offset_bottom = 615.0
+offset_bottom = 862.0
 theme = ExtResource("7_81wak")
 
 [node name="ScoreLabel" type="Label" parent="GameManager/UI"]
@@ -85,6 +85,13 @@ offset_bottom = 542.0
 scale = Vector2(1.5, 1.5)
 text = "1"
 
+[node name="NextPiecePreview" type="Panel" parent="GameManager/UI"]
+layout_mode = 0
+offset_top = 695.0
+offset_right = 200.0
+offset_bottom = 813.0
+theme = ExtResource("7_81wak")
+
 [node name="PauseButton" type="Button" parent="GameManager/UI"]
 layout_mode = 0
 offset_top = 1053.0
@@ -102,10 +109,10 @@ anchor_left = 1.061
 anchor_top = -0.019
 anchor_right = 1.061
 anchor_bottom = -0.019
-offset_left = -0.0430298
-offset_top = -9.752
+offset_left = -0.0429993
+offset_top = -10.059
 offset_right = 868.957
-offset_bottom = 1725.25
+offset_bottom = 1728.94
 grow_horizontal = 2
 grow_vertical = 2
 
