@@ -32,6 +32,7 @@ var local_blocks = [
 
 var fall_time = 1 # 下落间隔，数字越小下落越快
 var last_fall_time = 0
+var current_level = 1 # 添加当前等级变量
 
 # 增加计时器变量用于键盘输入重复控制
 var left_hold_timer := 0.0
@@ -63,13 +64,15 @@ func _ready():
 	randomize()
 	var shape_index = randi() % TETROMINO_SHAPES.size()
 	local_blocks = TETROMINO_SHAPES[shape_index]
+	
+	# 根据当前等级调整下落速度
+	adjust_fall_time()
 
-	# 检查生成的位置是否合法，如果不合法则结束游戏
+	# 如果位置被占据，就不生成了
 	for local in local_blocks:
 		var cell = grid_position + local
 		if grid_manager.is_occupied(cell.x, cell.y):
-			emit_signal("game_over")
-			queue_free()
+			queue_free() # 直接销毁这个方块
 			return
 
 	update_visual_position()
@@ -167,16 +170,43 @@ func rotate_tetromino():
 	for block in local_blocks:
 		# 顺时针旋转公式: (x, y) -> (-y, x)
 		rotated.append(Vector2(-block.y, block.x))
+	
+	# 尝试的偏移列表 - 墙踢机制
+	var offsets = [
+		Vector2(0, 0),   # 原位置
+		Vector2(-1, 0),  # 左移1格
+		Vector2(1, 0),   # 右移1格
+		Vector2(-2, 0),  # 左移2格 (I形可能需要)
+		Vector2(2, 0),   # 右移2格 (I形可能需要)
+		Vector2(0, -1),  # 向上偏移，适用于底部
+	]
+	
+	# 尝试每个偏移
+	for offset in offsets:
+		if try_rotation_with_offset(rotated, offset):
+			# 旋转成功，应用旋转和偏移
+			local_blocks = rotated
+			grid_position += offset
+			update_visual_position()
+			return
 
-	# 检查旋转后的每个块是否在有效位置上
-	for local in rotated:
-		var cell = grid_position + local
-		if not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
-			return # 如果发生碰撞或超出边界，则取消旋转
-
-	local_blocks = rotated
-	update_visual_position()
-
+# 辅助函数：尝试使用给定偏移量旋转
+func try_rotation_with_offset(rotated_blocks, offset):
+	var new_grid_position = grid_position + offset
+	
+	for local in rotated_blocks:
+		var cell = new_grid_position + local
+		
+		# 特殊处理顶部超出边界的情况
+		if cell.y < 0:
+			# 顶部可以超出边界，但水平方向仍需在边界内
+			if cell.x < 0 or cell.x >= grid_manager.GRID_WIDTH:
+				return false
+		# 正常边界检查
+		elif not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
+			return false # 此偏移不可用
+	
+	return true # 此偏移可以使用
 
 # 检查方块是否可以在当前位置移动
 func can_move_to(offset: Vector2) -> bool:
@@ -184,8 +214,14 @@ func can_move_to(offset: Vector2) -> bool:
 	for local in local_blocks:
 		# 计算该块在网格中的新位置
 		var cell = new_grid_position + local
-		# 判断边界及是否被占用
-		if not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
+		
+		# 特殊处理顶部超出边界的情况
+		if cell.y < 0:
+			# 顶部可以超出边界，但水平方向仍需在边界内
+			if cell.x < 0 or cell.x >= grid_manager.GRID_WIDTH:
+				return false
+		# 正常边界检查
+		elif not grid_manager.is_inside_grid(cell.x, cell.y) or grid_manager.is_occupied(cell.x, cell.y):
 			return false
 	return true
 
@@ -205,6 +241,15 @@ func lock_tetromino():
 			emit_signal("lines_cleared", cleared_lines)
 	
 	emit_signal("tetromino_locked")
+	check_game_over()
+
+func check_game_over():
+	# 检查游戏结束条件：有方块锁定在顶部区域（y <= 0）
+	for local in local_blocks:
+		var cell = grid_position + local
+		if cell.y <= 0:
+			emit_signal("game_over")
+			return
 
 # 硬降（直接落到底部）
 func hard_drop():
@@ -306,3 +351,17 @@ func handle_swipe(end_position):
 					move_down()
 	else:
 			is_swiping_down = false
+
+# 设置当前等级并调整下落速度
+func set_level(level):
+	current_level = level
+	adjust_fall_time()
+
+# 根据等级调整下落速度
+func adjust_fall_time():
+	var initial_fall_time = 1.0 # 初始下落时间
+	var min_fall_time = 0.1 # 最快下落时间
+
+	var new_fall_time = initial_fall_time / (1 + current_level * 0.3)
+	fall_time = max(min_fall_time, new_fall_time)
+	print("当前等级: %d, 下落时间: %.2f" % [current_level, fall_time])
