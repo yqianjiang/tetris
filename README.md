@@ -1,6 +1,6 @@
-# 俄罗斯方块（练手项目）
+# 俄罗斯方块
 
-demo 链接：https://yqianjiang.github.io/tetris/
+demo 链接：https://tetris.webgames.fun
 
 实现了经典俄罗斯方块的核心玩法，包括方块下落、旋转、消除等功能。
 
