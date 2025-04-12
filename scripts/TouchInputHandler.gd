@@ -32,8 +32,9 @@ var last_time = 0.0 # 上一次记录的时间
 var gesture_velocity = Vector2.ZERO # 当前手势速度
 var gesture_speeds = [] # 记录最近的手势速度
 var max_speed_records = 5 # 最多记录的速度数量
-var min_speed_threshold = 100.0 # 最小速度阈值（像素/秒），从50增加到100
-var max_speed_threshold = 1000.0 # 最大速度阈值（像素/秒），从800增加到1000
+var min_speed_threshold = 150.0 # 最小速度阈值（像素/秒），从100增加到150
+var max_speed_threshold = 1500.0 # 最大速度阈值（像素/秒），从1000增加到1500
+var horizontal_precision_mode = true # 启用水平精确移动模式
 
 func _ready():
 	set_process_input(true)
@@ -85,24 +86,41 @@ func update_gesture_speed(current_position):
 	var current_time = Time.get_ticks_msec() / 1000.0
 	var time_delta = current_time - last_time
 	
-	if time_delta > 0.0 and last_position != Vector2.ZERO:
+	# 添加最小时间阈值，防止极小的时间差导致计算不准确
+	if time_delta > 0.005 and last_position != Vector2.ZERO:
 		# 计算瞬时速度
 		var instant_velocity = (current_position - last_position) / time_delta
 		
 		# 保存当前速度到历史记录
 		gesture_speeds.append(instant_velocity)
 		if gesture_speeds.size() > max_speed_records:
+			# 移除最旧的记录
 			gesture_speeds.pop_front()
 		
-		# 计算平均速度（用于平滑处理）
-		gesture_velocity = Vector2.ZERO
-		for velocity in gesture_speeds:
-			gesture_velocity += velocity
-		gesture_velocity /= gesture_speeds.size()
+		# 使用加权平均计算手势速度，最新的速度权重更高
+		calculate_weighted_average_velocity()
 	
 	# 更新上次记录的位置和时间
 	last_position = current_position
 	last_time = current_time
+
+# 计算加权平均速度，新数据有更高权重
+func calculate_weighted_average_velocity():
+	if gesture_speeds.size() == 0:
+		gesture_velocity = Vector2.ZERO
+		return
+		
+	var total_weight = 0.0
+	gesture_velocity = Vector2.ZERO
+	
+	# 计算加权平均，最近的速度样本权重更大
+	for i in range(gesture_speeds.size()):
+		var weight = float(i + 1) # 权重线性增加
+		gesture_velocity += gesture_speeds[i] * weight
+		total_weight += weight
+	
+	if total_weight > 0:
+		gesture_velocity /= total_weight
 
 # 获取当前手势的速度大小
 func get_gesture_speed():
@@ -111,8 +129,10 @@ func get_gesture_speed():
 # 获取基于速度的操作因子（0.0-1.0之间）
 func get_speed_factor():
 	var speed = get_gesture_speed()
-	# 将速度映射到0-1范围，并限制在范围内
-	return clamp((speed - min_speed_threshold) / (max_speed_threshold - min_speed_threshold), 0.0, 1.0)
+	# 应用平滑曲线使响应更加自然
+	var normalized_speed = clamp((speed - min_speed_threshold) / (max_speed_threshold - min_speed_threshold), 0.0, 1.0)
+	# 使用平方根函数使中低速度更有反应
+	return sqrt(normalized_speed)
 
 # 处理触摸事件
 func _handle_touch(event):
@@ -131,21 +151,18 @@ func _handle_touch(event):
 		reset_gesture_speed() # 重置速度数据
 	else:
 		# 触摸结束
-		is_touching = false
-		
 		# 只有在拖动过程中没有移动时，才在释放时处理移动
 		if not has_moved_in_touch:
 			handle_swipe(event.position)
 		
-		# 重置下滑状态
-		is_swiping_down = false
-		reset_gesture_speed() # 重置速度数据
+		# 完全重置所有触摸状态变量
+		reset_touch_state()
 
 # 处理拖动事件
 func _handle_drag(event):
 	var current_time = Time.get_ticks_msec() / 1000.0
 	var drag_direction = event.position - touch_start_position
-	var speed_factor = get_speed_factor() * 0.7 # 减少速度因子的整体影响
+	var speed_factor = get_speed_factor() * 0.5 # 从0.7减少到0.5，大幅降低速度因子的整体影响
 	
 	# 首先检查是否已经处于向下滑动状态
 	if is_swiping_down:
@@ -213,18 +230,20 @@ func _handle_drag(event):
 				# 根据速度决定是否进行多次移动
 				var move_count = 1
 				
-				# 计算基于速度的移动次数增量
-				if speed_factor > 0.5: # 降低阈值从0.7到0.5
-					move_count += int(speed_factor * 2.5) # 从1.5增加到2.5，最多可能增加2次移动
-				
-				# 对于特别快的滑动，额外增加移动次数
-				if speed_factor > 0.8:
-					move_count += 1
-				
-				# 根据水平差值额外增加移动次数，实现快速滑动更远距离
-				var distance_bonus = int(horizontal_diff / (horizontal_move_threshold * 2))
-				if distance_bonus > 0:
-					move_count += min(distance_bonus, 3) # 最多额外增加3格
+				# 只在非精确模式下才增加移动次数
+				if not horizontal_precision_mode:
+					# 速度需要更高才会触发多次移动
+					if speed_factor > 0.7: # 从0.5提高到0.7
+						move_count += int(speed_factor * 1.5) # 从2.5减少到1.5
+					
+					# 对于特别快的滑动，额外增加移动次数，但要求更高速度
+					if speed_factor > 0.9: # 从0.8提高到0.9
+						move_count += 1
+					
+					# 根据水平差值额外增加移动次数，但大幅增加阈值
+					var distance_bonus = int(horizontal_diff / (horizontal_move_threshold * 3)) # 从2增加到3
+					if distance_bonus > 0:
+						move_count += min(distance_bonus, 2) # 从3减少到2，最多额外增加2格
 				
 				for i in range(move_count):
 					if new_direction > 0:
@@ -242,7 +261,7 @@ func _handle_drag(event):
 func handle_swipe(end_position):
 	var swipe_direction = end_position - touch_start_position
 	var swipe_distance = swipe_direction.length()
-	var speed_factor = get_speed_factor() * 0.7 # 减少速度因子的整体影响
+	var speed_factor = get_speed_factor() * 0.5 # 从0.7减少到0.5
 	
 	# 太短的滑动不处理，避免误触
 	if (swipe_distance < swipe_threshold * 0.9): # 从0.8增加到0.9，增加触发滑动的难度
@@ -275,15 +294,17 @@ func process_swipe_direction(direction, speed_factor):
 		# 根据速度和滑动距离决定移动次数
 		var move_count = 1
 		
-		# 基于速度的移动次数
-		if speed_factor > 0.5: # 从0.6降低到0.5
-			move_count += int(speed_factor * 3) # 从2增加到3，增加可能的额外移动次数
-		
-		# 根据滑动距离增加移动次数
-		var swipe_distance = abs(direction.x)
-		var distance_bonus = int(swipe_distance / (swipe_threshold * 1.5))
-		if distance_bonus > 0:
-			move_count += min(distance_bonus, 4) # 最多额外增加4格
+		# 只在非精确模式下才增加移动次数
+		if not horizontal_precision_mode:
+			# 基于速度的移动次数，但要求更高速度
+			if speed_factor > 0.7: # 从0.5提高到0.7
+				move_count += int(speed_factor * 2) # 从3减少到2
+			
+			# 根据滑动距离增加移动次数，但增加阈值
+			var swipe_distance = abs(direction.x)
+			var distance_bonus = int(swipe_distance / (swipe_threshold * 2.5)) # 从1.5增加到2.5
+			if distance_bonus > 0:
+				move_count += min(distance_bonus, 2) # 从4减少到2
 		
 		for i in range(move_count):
 			if direction.x > 0:
