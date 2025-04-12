@@ -26,144 +26,262 @@ var last_rotation_time = 0 # 上次旋转的时间
 var rotation_delay = 0.3 # 旋转操作的间隔时间(秒)
 var is_swiping_down = false # 下滑状态
 
+# 手势速度感知相关变量
+var last_position = Vector2.ZERO # 上一次记录的位置
+var last_time = 0.0 # 上一次记录的时间
+var gesture_velocity = Vector2.ZERO # 当前手势速度
+var gesture_speeds = [] # 记录最近的手势速度
+var max_speed_records = 5 # 最多记录的速度数量
+var min_speed_threshold = 50.0 # 最小速度阈值（像素/秒）
+var max_speed_threshold = 800.0 # 最大速度阈值（像素/秒）
+
 func _ready():
-	set_process_input(true)
+    set_process_input(true)
+    reset_gesture_speed()
+
+# 重置所有触摸状态变量的函数
+func reset_touch_state():
+    # 重置触摸基本状态
+    touch_start_position = Vector2.ZERO
+    is_touching = false
+    touch_start_time = 0
+    
+    # 重置水平移动相关状态
+    last_horizontal_move_time = 0
+    last_horizontal_position = Vector2.ZERO
+    
+    # 重置方向和移动状态
+    last_move_direction = Vector2.ZERO
+    has_moved_in_touch = false
+    last_rotation_time = 0
+    is_swiping_down = false
+    
+    # 重置位置和时间记录
+    last_position = Vector2.ZERO
+    last_time = 0.0
+    
+    # 重置手势速度数据
+    reset_gesture_speed()
+
+# 重置手势速度数据
+func reset_gesture_speed():
+    gesture_velocity = Vector2.ZERO
+    gesture_speeds = []
+    last_time = Time.get_ticks_msec() / 1000.0
 
 # 处理输入事件
 func _input(event):
-	# 处理触摸事件
-	if event is InputEventScreenTouch:
-		_handle_touch(event)
-	# 处理拖动事件
-	elif event is InputEventScreenDrag and is_touching:
-		_handle_drag(event)
+    # 处理触摸事件
+    if event is InputEventScreenTouch:
+        _handle_touch(event)
+    # 处理拖动事件
+    elif event is InputEventScreenDrag and is_touching:
+        # 计算当前手势速度
+        update_gesture_speed(event.position)
+        _handle_drag(event)
+
+# 更新手势速度
+func update_gesture_speed(current_position):
+    var current_time = Time.get_ticks_msec() / 1000.0
+    var time_delta = current_time - last_time
+    
+    if time_delta > 0.0 and last_position != Vector2.ZERO:
+        # 计算瞬时速度
+        var instant_velocity = (current_position - last_position) / time_delta
+        
+        # 保存当前速度到历史记录
+        gesture_speeds.append(instant_velocity)
+        if gesture_speeds.size() > max_speed_records:
+            gesture_speeds.pop_front()
+        
+        # 计算平均速度（用于平滑处理）
+        gesture_velocity = Vector2.ZERO
+        for velocity in gesture_speeds:
+            gesture_velocity += velocity
+        gesture_velocity /= gesture_speeds.size()
+    
+    # 更新上次记录的位置和时间
+    last_position = current_position
+    last_time = current_time
+
+# 获取当前手势的速度大小
+func get_gesture_speed():
+    return gesture_velocity.length()
+
+# 获取基于速度的操作因子（0.0-1.0之间）
+func get_speed_factor():
+    var speed = get_gesture_speed()
+    # 将速度映射到0-1范围，并限制在范围内
+    return clamp((speed - min_speed_threshold) / (max_speed_threshold - min_speed_threshold), 0.0, 1.0)
 
 # 处理触摸事件
 func _handle_touch(event):
-	if event.pressed:
-		# 触摸开始
-		touch_start_position = event.position
-		last_horizontal_position = event.position
-		is_touching = true
-		touch_start_time = Time.get_ticks_msec() / 1000.0
-		last_horizontal_move_time = 0
-		has_moved_in_touch = false # 重置移动状态
-		last_move_direction = Vector2.ZERO
-		is_swiping_down = false # 重置下滑状态
-	else:
-		# 触摸结束
-		is_touching = false
-		
-		# 只有在拖动过程中没有移动时，才在释放时处理移动
-		if not has_moved_in_touch:
-			handle_swipe(event.position)
-		
-		# 重置下滑状态
-		is_swiping_down = false
+    if event.pressed:
+        # 触摸开始
+        touch_start_position = event.position
+        last_horizontal_position = event.position
+        last_position = event.position # 初始化速度计算的起始位置
+        is_touching = true
+        touch_start_time = Time.get_ticks_msec() / 1000.0
+        last_time = touch_start_time # 初始化速度计算的起始时间
+        last_horizontal_move_time = 0
+        has_moved_in_touch = false # 重置移动状态
+        last_move_direction = Vector2.ZERO
+        is_swiping_down = false # 重置下滑状态
+        reset_gesture_speed() # 重置速度数据
+    else:
+        # 触摸结束
+        is_touching = false
+        
+        # 只有在拖动过程中没有移动时，才在释放时处理移动
+        if not has_moved_in_touch:
+            handle_swipe(event.position)
+        
+        # 重置下滑状态
+        is_swiping_down = false
+        reset_gesture_speed() # 重置速度数据
 
 # 处理拖动事件
 func _handle_drag(event):
-	var current_time = Time.get_ticks_msec() / 1000.0
-	var drag_direction = event.position - touch_start_position
-	
-	# 首先检查是否已经处于向下滑动状态
-	if is_swiping_down:
-		# 如果已经在向下滑动，只处理垂直方向的移动
-		if drag_direction.y > swipe_threshold:
-			emit_signal("move_down")
-			touch_start_position.y = event.position.y # 只更新Y坐标起始位置
-			has_moved_in_touch = true
-		return # 直接返回，不处理其他方向的移动
-		
-	# 检测主要的滑动方向
-	var is_primarily_vertical = abs(drag_direction.y) > abs(drag_direction.x) * 1.2
-	var is_primarily_horizontal = abs(drag_direction.x) > abs(drag_direction.y) * 1.2
-	
-	# 处理垂直向上滑动(旋转方块)
-	if drag_direction.y < -swipe_threshold and is_primarily_vertical:
-		# 添加时间间隔限制，避免连续快速旋转
-		if current_time - last_rotation_time > rotation_delay:
-			emit_signal("rotate")
-			last_rotation_time = current_time
-			touch_start_position = event.position # 更新起始位置以避免连续触发
-			has_moved_in_touch = true
-	
-	# 处理垂直下滑
-	elif drag_direction.y > swipe_threshold and is_primarily_vertical:
-		# 设置为下滑状态，阻止后续水平移动
-		is_swiping_down = true
-		emit_signal("move_down")
-		touch_start_position.y = event.position.y # 只更新Y坐标起始位置
-		has_moved_in_touch = true
-	
-	# 处理水平滑动 - 只有在非下滑状态才处理
-	elif is_primarily_horizontal and not is_swiping_down:
-		# 计算与上次水平移动位置的差距
-		var horizontal_diff = abs(event.position.x - last_horizontal_position.x)
-		
-		# 检查是否已经过了延迟时间并且移动距离足够
-		var move_delay = horizontal_move_delay
-		# 长时间拖动时逐渐减少延迟，提升连续移动速度
-		if current_time - touch_start_time > 0.5:
-			move_delay *= 0.7
-		
-		if current_time - last_horizontal_move_time > move_delay and horizontal_diff > horizontal_move_threshold:
-			var new_direction = 1 if event.position.x > last_horizontal_position.x else -1
-			var last_direction = 1 if last_move_direction.x > 0 else -1 if last_move_direction.x < 0 else 0
-			
-			# 只有方向改变或者满足移动条件时才触发移动
-			if last_direction != new_direction or horizontal_diff > horizontal_move_threshold * 1.5:
-				if new_direction > 0:
-					emit_signal("move_right")
-				else:
-					emit_signal("move_left")
-				
-				# 更新上次移动的时间和位置
-				last_horizontal_move_time = current_time
-				last_horizontal_position = event.position
-				last_move_direction = Vector2(new_direction, 0)
-				has_moved_in_touch = true
+    var current_time = Time.get_ticks_msec() / 1000.0
+    var drag_direction = event.position - touch_start_position
+    var speed_factor = get_speed_factor() # 获取速度因子
+    
+    # 首先检查是否已经处于向下滑动状态
+    if is_swiping_down:
+        # 如果已经在向下滑动，只处理垂直方向的移动
+        if drag_direction.y > swipe_threshold:
+            emit_signal("move_down")
+            touch_start_position.y = event.position.y # 只更新Y坐标起始位置
+            has_moved_in_touch = true
+        return # 直接返回，不处理其他方向的移动
+        
+    # 检测主要的滑动方向
+    var is_primarily_vertical = abs(drag_direction.y) > abs(drag_direction.x) * 1.2
+    var is_primarily_horizontal = abs(drag_direction.x) > abs(drag_direction.y) * 1.2
+    
+    # 处理垂直向上滑动(旋转方块)
+    if drag_direction.y < -swipe_threshold and is_primarily_vertical:
+        # 添加时间间隔限制，避免连续快速旋转
+        # 根据手势速度调整旋转间隔，速度越快间隔越短
+        var adjusted_rotation_delay = rotation_delay * (1.0 - speed_factor * 0.5)
+        if current_time - last_rotation_time > adjusted_rotation_delay:
+            emit_signal("rotate")
+            last_rotation_time = current_time
+            touch_start_position = event.position # 更新起始位置以避免连续触发
+            has_moved_in_touch = true
+    
+    # 处理垂直下滑
+    elif drag_direction.y > swipe_threshold and is_primarily_vertical:
+        # 设置为下滑状态，阻止后续水平移动
+        is_swiping_down = true
+        
+        # 根据手势速度决定是否执行硬降落
+        if speed_factor > 0.7: # 速度因子大于0.7时执行硬降落
+            emit_signal("hard_drop")
+        else:
+            emit_signal("move_down")
+            
+        touch_start_position.y = event.position.y # 只更新Y坐标起始位置
+        has_moved_in_touch = true
+    
+    # 处理水平滑动 - 只有在非下滑状态才处理
+    elif is_primarily_horizontal and not is_swiping_down:
+        # 计算与上次水平移动位置的差距
+        var horizontal_diff = abs(event.position.x - last_horizontal_position.x)
+        
+        # 检查是否已经过了延迟时间并且移动距离足够
+        # 根据手势速度调整延迟
+        var move_delay = horizontal_move_delay
+        
+        # 长时间拖动时逐渐减少延迟，提升连续移动速度
+        if current_time - touch_start_time > 0.5:
+            move_delay *= 0.7
+        
+        # 根据手势速度进一步调整延迟
+        move_delay *= (1.0 - speed_factor * 0.6)
+        
+        # 根据手势速度调整移动阈值
+        var adjusted_threshold = horizontal_move_threshold * (1.0 - speed_factor * 0.5)
+        
+        if current_time - last_horizontal_move_time > move_delay and horizontal_diff > adjusted_threshold:
+            var new_direction = 1 if event.position.x > last_horizontal_position.x else -1
+            var last_direction = 1 if last_move_direction.x > 0 else -1 if last_move_direction.x < 0 else 0
+            
+            # 只有方向改变或者满足移动条件时才触发移动
+            if last_direction != new_direction or horizontal_diff > adjusted_threshold * 1.5:
+                # 根据速度决定是否进行多次移动
+                var move_count = 1
+                if speed_factor > 0.5:
+                    move_count += int(speed_factor * 2) # 最多可能增加2次移动
+                
+                for i in range(move_count):
+                    if new_direction > 0:
+                        emit_signal("move_right")
+                    else:
+                        emit_signal("move_left")
+                
+                # 更新上次移动的时间和位置
+                last_horizontal_move_time = current_time
+                last_horizontal_position = event.position
+                last_move_direction = Vector2(new_direction, 0)
+                has_moved_in_touch = true
 
 # 处理滑动手势
 func handle_swipe(end_position):
-	var swipe_direction = end_position - touch_start_position
-	var swipe_distance = swipe_direction.length()
-	
-	# 太短的滑动不处理，避免误触
-	if swipe_distance < swipe_threshold * 0.8:
-		# 检查是否为点击操作
-		var touch_duration = (Time.get_ticks_msec() / 1000.0) - touch_start_time
-		if swipe_distance < tap_threshold and touch_duration < tap_time_threshold:
-			# 点击操作处理为旋转
-			emit_signal("rotate")
-		return
-	
-	# 使用辅助函数处理滑动方向和操作
-	process_swipe_direction(swipe_direction)
+    var swipe_direction = end_position - touch_start_position
+    var swipe_distance = swipe_direction.length()
+    var speed_factor = get_speed_factor() # 获取速度因子
+    
+    # 太短的滑动不处理，避免误触
+    if (swipe_distance < swipe_threshold * 0.8):
+        # 检查是否为点击操作
+        var touch_duration = (Time.get_ticks_msec() / 1000.0) - touch_start_time
+        if swipe_distance < tap_threshold and touch_duration < tap_time_threshold:
+            # 点击操作处理为旋转
+            emit_signal("rotate")
+        return
+    
+    # 使用辅助函数处理滑动方向和操作，传入速度因子
+    process_swipe_direction(swipe_direction, speed_factor)
 
 # 处理滑动方向并执行相应操作
-func process_swipe_direction(direction):
-	var current_time = Time.get_ticks_msec() / 1000.0
-	
-	# 确定主要方向
-	var is_primarily_vertical = abs(direction.y) > abs(direction.x) * 1.2
-	var is_primarily_horizontal = abs(direction.x) > abs(direction.y) * 1.2
-	
-	# 处理向上滑动(旋转)
-	if direction.y < -swipe_threshold and is_primarily_vertical:
-		if current_time - last_rotation_time > rotation_delay:
-			emit_signal("rotate")
-			last_rotation_time = current_time
-	
-	# 水平滑动处理
-	elif is_primarily_horizontal and abs(direction.x) > swipe_threshold:
-		if direction.x > 0:
-			emit_signal("move_right")
-		else:
-			emit_signal("move_left")
-	
-	# 垂直向下滑动且超过阈值
-	elif direction.y > swipe_threshold and is_primarily_vertical:
-		var distance = int(direction.y / swipe_threshold)
-		for i in range(min(distance, 3)): # 减少最大连续下落次数，提高控制精度
-			emit_signal("move_down")
+func process_swipe_direction(direction, speed_factor):
+    var current_time = Time.get_ticks_msec() / 1000.0
+    
+    # 确定主要方向
+    var is_primarily_vertical = abs(direction.y) > abs(direction.x) * 1.2
+    var is_primarily_horizontal = abs(direction.x) > abs(direction.y) * 1.2
+    
+    # 处理向上滑动(旋转)
+    if direction.y < -swipe_threshold and is_primarily_vertical:
+        if current_time - last_rotation_time > rotation_delay:
+            emit_signal("rotate")
+            last_rotation_time = current_time
+    
+    # 水平滑动处理
+    elif is_primarily_horizontal and abs(direction.x) > swipe_threshold:
+        # 根据速度决定移动次数
+        var move_count = 1
+        if speed_factor > 0.4:
+            move_count += int(speed_factor * 3) # 最多可能增加3次移动
+        
+        for i in range(move_count):
+            if direction.x > 0:
+                emit_signal("move_right")
+            else:
+                emit_signal("move_left")
+    
+    # 垂直向下滑动且超过阈值
+    elif direction.y > swipe_threshold and is_primarily_vertical:
+        # 检查是否应该执行硬降落（快速下落）
+        if speed_factor > 0.7 or direction.y > swipe_threshold * 3:
+            emit_signal("hard_drop")
+        else:
+            # 否则根据滑动距离和速度决定下落次数
+            var base_distance = int(direction.y / swipe_threshold)
+            var speed_bonus = int(speed_factor * 2)
+            var move_count = min(base_distance + speed_bonus, 5) # 最多5次，避免过度下落
+            
+            for i in range(move_count):
+                emit_signal("move_down")

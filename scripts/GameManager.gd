@@ -162,9 +162,13 @@ func pause_game():
 func resume_game():
 	if game_state == GameState.PAUSED:
 		game_state = GameState.PLAYING
-		get_tree().paused = false
 		update_pause_button_visible()
 		hide_pause_ui()
+		
+		# 重置触摸输入处理器状态，避免暂停前的触摸状态影响恢复后的操作
+		get_node('Tetromino/TouchInputHandler').reset_touch_state()
+		
+		get_tree().paused = false
 
 # 重新开始游戏
 func restart_game():

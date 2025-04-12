@@ -32,7 +32,6 @@ var right_hold_timer := 0.0
 var down_hold_timer := 0.0
 
 const INITIAL_DELAY = 0.1 # 初始延迟
-const REPEAT_INTERVAL = 0.05 # 重复间隔
 
 var soft_drop_height = 0
 
@@ -58,6 +57,7 @@ func _ready():
 func setup_touch_input_handler():
 	# 创建触摸输入处理器实例
 	touch_input_handler = load("res://scripts/TouchInputHandler.gd").new()
+	touch_input_handler.name = "TouchInputHandler"
 	add_child(touch_input_handler)
 	
 	# 连接信号
