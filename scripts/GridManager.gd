@@ -74,3 +74,14 @@ func move_down_rows(start_y: int):
 			if grid[y - 1][x] != 0:
 				grid[y][x] = grid[y - 1][x]
 				grid[y - 1][x] = 0
+
+# 清空网格，用于游戏重新开始
+func clear_grid():
+	# 重置网格中的所有单元格为空
+	for y in range(grid.size()):
+		for x in range(grid[y].size()):
+			grid[y][x] = 0
+	
+	# 发送网格更新信号
+	emit_signal("grid_updated")
+	

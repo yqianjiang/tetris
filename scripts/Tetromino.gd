@@ -1,4 +1,5 @@
 extends Node2D
+class_name Tetromino
 
 const CELL_SIZE = 87  # 确保使用正确的格子大小
 

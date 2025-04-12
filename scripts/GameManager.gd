@@ -1,12 +1,20 @@
 extends Node2D
 
+# 定义游戏状态枚举
+enum GameState {
+	MENU,       # 游戏开始菜单状态
+	PLAYING,    # 游戏进行中状态
+	PAUSED,     # 游戏暂停状态
+	GAME_OVER   # 游戏结束状态
+}
+
 @export var tetromino_scene: PackedScene
 @onready var grid_manager = $GridManager  # 获取 GridManager 节点
 @onready var grid_renderer = $GridRenderer/TileMap  # 获取 GridRenderer 节点
 @onready var score_label = $UI/ScoreLabel  # 获取 ScoreLabel 节点
 @onready var lines_label = $UI/LinesLabel  # 获取 LinesLabel 节点
 @onready var level_label = $UI/LevelLabel  # 获取 LevelLabel 节点
-@onready var pause_menu = $UI/PauseMenu  # 获取暂停菜单
+@onready var pause_menu = $UI/GameMenu  # 获取暂停菜单
 @onready var pause_button = $UI/PauseButton  # 获取暂停按钮
 @onready var next_piece_preview = $UI/NextPiecePreview  # 获取下一个方块预览区域
 
@@ -14,11 +22,11 @@ extends Node2D
 var score = 0
 var lines_cleared = 0
 var level = 1  # 添加等级变量，初始为1级
+var start_level = 1  # 初始等级
 
 # 添加一个变量来跟踪当前是否有活动的方块
 var has_active_tetromino = false
-# 添加游戏暂停状态变量
-var game_paused = false
+var game_state = GameState.MENU
 
 # 添加变量来存储下一个方块的形状索引
 var next_shape_index = 0
@@ -27,9 +35,13 @@ func _ready():
 	# 初始化第一个下一个方块形状
 	generate_next_shape()
 	
-	spawn_new_tetromino()
-	grid_renderer.grid_manager = grid_manager  # 将 GridManager 传递给 GridRenderer
-	# 连接 grid_manager 的 grid_updated 信号
+	# 设置起始状态 - 游戏处于菜单状态
+	game_state = GameState.MENU
+	get_tree().paused = true
+	update_pause_button_visible()
+	
+	# 准备游戏组件但不立即开始
+	grid_renderer.grid_manager = grid_manager
 	grid_manager.connect("grid_updated", Callable(grid_renderer, "_on_grid_updated"))
 	grid_manager.connect("lines_to_clear", Callable(grid_renderer, "_on_lines_to_clear"))
 	
@@ -39,10 +51,64 @@ func _ready():
 	# 设置暂停菜单的z_index为较高值，确保它始终显示在最顶层
 	pause_menu.z_index = 5
 	
-	# 连接暂停按钮信号
+	# 连接按钮信号
 	pause_button.pressed.connect(toggle_pause)
-	$UI/PauseMenu/VBoxContainer/ResumeButton.pressed.connect(resume_game)
-	$UI/PauseMenu/VBoxContainer/ExitButton.pressed.connect(exit_game)
+	
+	# 创建开始菜单
+	setup_game_menu()
+	
+	# 显示开始菜单
+	show_game_menu()
+
+func update_pause_button_visible():
+	pause_button.visible = game_state == GameState.PLAYING
+
+# 设置游戏菜单
+func setup_game_menu():
+	var vbox = $UI/GameMenu/VBoxContainer
+	
+	# 连接开始游戏按钮
+	var start_button = vbox.get_node_or_null("StartButton")
+	start_button.pressed.connect(start_game)
+	
+	# 连接继续游戏按钮
+	var resume_button = vbox.get_node_or_null("ResumeButton")
+	resume_button.pressed.connect(resume_game)
+	
+	# 连接重新开始按钮
+	var restart_button = vbox.get_node_or_null("RestartButton")
+	restart_button.pressed.connect(restart_game)
+	
+	# 连接退出按钮
+	var exit_button = vbox.get_node_or_null("ExitButton") 
+	exit_button.pressed.connect(exit_game)
+	
+	# 添加等级选择器
+	var level_selector = vbox.get_node_or_null("LevelSelector")
+	if level_selector:		
+		# 添加等级选择下拉菜单
+		var option_button = level_selector.get_node("LevelOption")
+		for i in range(1, 11): # 允许选择1-10级
+			option_button.add_item(str(i), i-1)
+
+# 开始游戏函数
+func start_game():
+	# 获取选择的等级
+	var level_option = $UI/GameMenu/VBoxContainer/LevelSelector/LevelOption
+	if level_option:
+		level = level_option.selected + 1
+		start_level = level  # 保存初始等级
+	
+	# 开始游戏
+	game_state = GameState.PLAYING
+	get_tree().paused = false
+	update_pause_button_visible()
+	hide_pause_ui()
+	update_score_display()
+	
+	# 如果是首次开始游戏，则生成第一个方块
+	if not has_active_tetromino:
+		spawn_new_tetromino()
 
 # 生成下一个方块的形状
 func generate_next_shape():
@@ -79,33 +145,88 @@ func _input(event):
 
 # 暂停/继续游戏切换函数
 func toggle_pause():
-	if game_paused:
-		resume_game()
-	else:
+	if game_state == GameState.PLAYING:
 		pause_game()
+	elif game_state == GameState.PAUSED:
+		resume_game()
 
 # 暂停游戏
 func pause_game():
-	if not game_paused:
-		game_paused = true
+	if game_state == GameState.PLAYING:
+		game_state = GameState.PAUSED
 		get_tree().paused = true
-		show_pause_ui()
+		update_pause_button_visible()
+		show_game_menu()
 
 # 继续游戏
 func resume_game():
-	if game_paused:
-		game_paused = false
+	if game_state == GameState.PAUSED:
+		game_state = GameState.PLAYING
 		get_tree().paused = false
+		update_pause_button_visible()
 		hide_pause_ui()
+
+# 重新开始游戏
+func restart_game():
+	# 重置游戏状态
+	score = 0
+	lines_cleared = 0
+	level = 1
+	has_active_tetromino = false
+	# 清空网格
+	grid_manager.clear_grid()
+	# 清除旧的方块
+	for child in get_children():
+		if child is Tetromino:
+			child.queue_free()
+	# 清除下一个方块预览
+	for child in next_piece_preview.get_children():
+		if child is Sprite2D:
+			child.queue_free()
+
+	start_game()
 
 # 退出游戏
 func exit_game():
 	get_tree().quit()
 
-# 显示暂停UI
-func show_pause_ui():
+# 统一显示游戏菜单的函数
+func show_game_menu():
 	if pause_menu:
 		pause_menu.visible = true
+		
+		var vbox = $UI/GameMenu/VBoxContainer
+
+		# 获取菜单标题节点
+		var menu_title = vbox.get_node_or_null("Title")
+		if menu_title:
+			menu_title.visible = true
+			match game_state:
+				GameState.MENU:
+					menu_title.visible = false
+				GameState.GAME_OVER:
+					menu_title.text = "Game over"
+				GameState.PAUSED:
+					menu_title.text = "Paused"
+		
+		# 设置各按钮的可见性
+		
+		var start_button = vbox.get_node_or_null("StartButton")
+		if start_button:
+			start_button.visible = game_state == GameState.MENU
+			
+		var resume_button = vbox.get_node_or_null("ResumeButton")
+		if resume_button:
+			resume_button.visible = game_state == GameState.PAUSED
+			
+		var restart_button = vbox.get_node_or_null("RestartButton")
+		if restart_button:
+			restart_button.visible = game_state != GameState.MENU
+			
+		var level_selector = vbox.get_node_or_null("LevelSelector")
+		if level_selector:
+			level_selector.visible = game_state == GameState.MENU or game_state == GameState.GAME_OVER
+		
 
 # 隐藏暂停UI
 func hide_pause_ui():
@@ -149,19 +270,20 @@ func _on_tetromino_locked():
 func _on_game_over():
 	# 重置活动方块标志
 	has_active_tetromino = false
+	game_state = GameState.GAME_OVER
 	
-	print("游戏结束")
-	print("最终得分: %d, 消除行数: %d, 最终等级: %d" % [score, lines_cleared, level])
-	get_tree().paused = true  # 暂停游戏，或者执行其他游戏结束逻辑
-
-	# get_tree().reload_current_scene()
+	get_tree().paused = true  # 暂停游戏
+	update_pause_button_visible()
+	
+	# 显示游戏结束菜单
+	show_game_menu()
 
 # 处理行消除事件
 func _on_lines_cleared(count):
 	lines_cleared += count
 	
 	# 更新等级 - 每消除10行升一级
-	level = (lines_cleared / 10) + 1
+	level = (lines_cleared / 10) + start_level
 	
 	# 根据消除的行数计算得分，并乘以当前等级
 	var line_score = 0
@@ -169,7 +291,7 @@ func _on_lines_cleared(count):
 		1: line_score = 100
 		2: line_score = 300
 		3: line_score = 700
-		4: line_score = 1500  # 一次消4行（俄罗斯方块）
+		4: line_score = 1500
 	
 	# 得分乘以当前等级
 	score += line_score * (level + 1)

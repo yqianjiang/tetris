@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://nhee58tvd4ck"]
+[gd_scene load_steps=10 format=3 uid="uid://nhee58tvd4ck"]
 
 [ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
 [ext_resource type="Script" path="res://scripts/TouchPanel.gd" id="1_lbv4k"]
@@ -8,6 +8,13 @@
 [ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
 [ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
 [ext_resource type="Theme" uid="uid://4dhs5hvwry2w" path="res://theme.tres" id="7_81wak"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4oul"]
+bg_color = Color(0.129515, 0.173106, 0.240559, 0.678431)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [node name="Game" type="Node2D"]
 
@@ -58,7 +65,7 @@ anchors_preset = 0
 offset_left = -276.0
 offset_top = 23.0
 offset_right = -13.0
-offset_bottom = 862.0
+offset_bottom = 1715.0
 theme = ExtResource("7_81wak")
 
 [node name="ScoreLabel" type="Label" parent="GameManager/UI"]
@@ -95,57 +102,73 @@ theme = ExtResource("7_81wak")
 [node name="PauseButton" type="Button" parent="GameManager/UI"]
 layout_mode = 0
 offset_top = 1053.0
-offset_right = 100.0
-offset_bottom = 1108.0
-scale = Vector2(1.5, 1.5)
-text = "暂停"
+offset_right = 202.0
+offset_bottom = 1128.0
+theme_override_font_sizes/font_size = 38
+text = "Pause"
 
-[node name="PauseMenu" type="Panel" parent="GameManager/UI"]
+[node name="GameMenu" type="Panel" parent="GameManager/UI"]
 process_mode = 2
-visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 1.061
 anchor_top = -0.019
 anchor_right = 1.061
 anchor_bottom = -0.019
-offset_left = -0.0429993
-offset_top = -10.059
-offset_right = 868.957
-offset_bottom = 1728.94
+offset_left = -3.043
+offset_top = 7.148
+offset_right = 866.957
+offset_bottom = 1746.15
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_a4oul")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GameManager/UI/PauseMenu"]
+[node name="VBoxContainer" type="VBoxContainer" parent="GameManager/UI/GameMenu"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -193.5
-offset_top = -173.0
-offset_right = 6.5
+offset_left = -148.0
+offset_top = -294.5
+offset_right = 136.0
+offset_bottom = 295.5
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(2, 2)
-theme_override_constants/separation = 20
 alignment = 1
 
-[node name="Label" type="Label" parent="GameManager/UI/PauseMenu/VBoxContainer"]
+[node name="Title" type="Label" parent="GameManager/UI/GameMenu/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "游戏暂停"
+theme_override_font_sizes/font_size = 64
+text = "Tetris"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="GameManager/UI/PauseMenu/VBoxContainer"]
+[node name="LevelSelector" type="HBoxContainer" parent="GameManager/UI/GameMenu/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 24
-text = "继续游戏"
+theme_override_constants/separation = 16
+alignment = 1
 
-[node name="ExitButton" type="Button" parent="GameManager/UI/PauseMenu/VBoxContainer"]
+[node name="Label" type="Label" parent="GameManager/UI/GameMenu/VBoxContainer/LevelSelector"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 24
-text = "退出游戏"
+text = "level: "
+
+[node name="LevelOption" type="OptionButton" parent="GameManager/UI/GameMenu/VBoxContainer/LevelSelector"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StartButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
+layout_mode = 2
+text = "Start"
+
+[node name="ResumeButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
+layout_mode = 2
+text = "Resume"
+
+[node name="RestartButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
+layout_mode = 2
+text = "Restart"
+
+[node name="ExitButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
