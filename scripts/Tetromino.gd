@@ -38,11 +38,18 @@ var is_hard_dropping = false # 标记是否正在执行硬降动画
 var hard_drop_target_y = 0 # 硬降的目标Y坐标
 var hard_drop_speed = 180.0 # 硬降的移动速度 (格子/秒)
 
+# 添加触摸免疫期相关变量
+var touch_immunity_timer = 0.0
+var touch_immunity_duration = 0.3 # 生成后0.3秒内免疫向下触摸
+
 func _ready():
 	randomize()
 	
 	# 根据当前等级调整下落速度
 	adjust_fall_time()
+
+	# 初始化触摸免疫计时器
+	touch_immunity_timer = 0.0
 
 	# 如果位置被占据，就不生成了
 	for local in local_blocks:
@@ -66,9 +73,22 @@ func setup_touch_input_handler():
 	# 连接信号
 	touch_input_handler.connect("move_left", Callable(self, "move_left"))
 	touch_input_handler.connect("move_right", Callable(self, "move_right"))
-	touch_input_handler.connect("move_down", Callable(self, "soft_drop"))
+	touch_input_handler.connect("move_down", Callable(self, "handle_move_down"))
 	touch_input_handler.connect("rotate", Callable(self, "rotate_tetromino"))
-	touch_input_handler.connect("hard_drop", Callable(self, "hard_drop"))
+	touch_input_handler.connect("hard_drop", Callable(self, "handle_hard_drop"))
+	
+	# 重置触摸处理器状态
+	touch_input_handler.reset_touch_state()
+
+# 新增：处理向下移动，增加免疫期检查
+func handle_move_down():
+	if touch_immunity_timer <= 0:
+		soft_drop()
+
+# 新增：处理硬降，增加免疫期检查
+func handle_hard_drop():
+	if touch_immunity_timer <= 0:
+		hard_drop()
 
 # 执行软降
 func soft_drop():
@@ -92,6 +112,10 @@ func update_visual_position():
 
 # 每帧更新
 func _process(delta):
+	# 更新触摸免疫计时器
+	if touch_immunity_timer > 0:
+		touch_immunity_timer -= delta
+	
 	last_fall_time += delta
 	
 	# 处理硬降动画

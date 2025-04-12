@@ -166,10 +166,12 @@ func resume_game():
 		hide_pause_ui()
 		
 		# 重置触摸输入处理器状态，避免暂停前的触摸状态影响恢复后的操作
-		var touch_input_handler = get_node('Tetromino/TouchInputHandler')
+		var touch_input_handler = get_node_or_null('Tetromino/TouchInputHandler')
 		if touch_input_handler:
 			touch_input_handler.reset_touch_state()
 		
+		# 短暂延迟后开始游戏，确保所有触摸状态已重置
+		await get_tree().create_timer(0.1).timeout
 		get_tree().paused = false
 
 # 重新开始游戏
@@ -177,7 +179,7 @@ func restart_game():
 	# 重置游戏状态
 	score = 0
 	lines_cleared = 0
-	level = 1
+	level = start_level  # 使用选择的起始等级，而不是固定为1
 	has_active_tetromino = false
 	# 清空网格
 	grid_manager.clear_grid()
@@ -190,6 +192,11 @@ func restart_game():
 		if child is Sprite2D:
 			child.queue_free()
 
+	# 重新生成第一个下一个方块形状
+	generate_next_shape()
+	
+	# 短暂延迟后开始游戏，确保所有触摸状态已重置
+	await get_tree().create_timer(0.1).timeout
 	start_game()
 
 # 退出游戏
@@ -244,6 +251,9 @@ func spawn_new_tetromino():
 	if has_active_tetromino:
 		return
 		
+	# 添加一个小延迟，确保前一个方块的触摸操作已完成
+	await get_tree().create_timer(0.15).timeout
+	
 	var new_tetromino = tetromino_scene.instantiate()
 	new_tetromino.grid_manager = grid_manager  # 将 GridManager 传递给方块
 	new_tetromino.connect("game_over", Callable(self, "_on_game_over"))
@@ -260,6 +270,9 @@ func spawn_new_tetromino():
 	new_tetromino.set_shape(next_shape_index)
 	
 	add_child(new_tetromino)
+	
+	# 初始化触摸免疫计时器
+	new_tetromino.touch_immunity_timer = new_tetromino.touch_immunity_duration
 	
 	# 设置活动方块标志
 	has_active_tetromino = true

@@ -58,7 +58,7 @@
             #loading-screen img {
                 width: 150px;
                 height: auto;
-                margin-bottom: 20px;
+                margin-bottom: 28px;
             }
             .progress-wrapper {
                 position: relative;
@@ -73,6 +73,7 @@
                 left: 0;
                 width: 0;
                 height: 100%;
+                min-width: 6%;
                 display: block;
                 height: 100%;
                 border-radius: 16px;
@@ -115,7 +116,7 @@
         
         <script src="index.js"></script>
         <script>
-            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17602752,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
+            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17602944,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
             engine.startGame({
                 onProgress: function(current, total) {
                     var progress = (current / total) * 100;
