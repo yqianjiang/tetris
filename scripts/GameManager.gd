@@ -166,7 +166,9 @@ func resume_game():
 		hide_pause_ui()
 		
 		# 重置触摸输入处理器状态，避免暂停前的触摸状态影响恢复后的操作
-		get_node('Tetromino/TouchInputHandler').reset_touch_state()
+		var touch_input_handler = get_node('Tetromino/TouchInputHandler')
+		if touch_input_handler:
+			touch_input_handler.reset_touch_state()
 		
 		get_tree().paused = false
 
@@ -244,10 +246,11 @@ func spawn_new_tetromino():
 		
 	var new_tetromino = tetromino_scene.instantiate()
 	new_tetromino.grid_manager = grid_manager  # 将 GridManager 传递给方块
-	new_tetromino.connect("tetromino_locked", Callable(self, "_on_tetromino_locked"))
 	new_tetromino.connect("game_over", Callable(self, "_on_game_over"))
 	new_tetromino.connect("lines_cleared", Callable(self, "_on_lines_cleared"))
 	new_tetromino.connect("piece_dropped", Callable(self, "_on_piece_dropped"))
+	new_tetromino.connect("block_placed", Callable(self, "_on_block_placed"))
+	new_tetromino.connect("block_placed", Callable(grid_renderer, "_on_block_placed"))  # 连接方块放置信号
 	
 	# 设置tetromino的等级
 	if "set_level" in new_tetromino:
@@ -264,7 +267,7 @@ func spawn_new_tetromino():
 	# 生成新的下一个方块形状
 	generate_next_shape()
 
-func _on_tetromino_locked():
+func _on_block_placed(_placed_positions):
 	# 重置活动方块标志，表示当前没有活动方块
 	has_active_tetromino = false
 	

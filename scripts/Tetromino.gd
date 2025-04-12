@@ -3,10 +3,10 @@ class_name Tetromino
 
 const CELL_SIZE = 87  # 确保使用正确的格子大小
 
-signal tetromino_locked
 signal game_over
 signal lines_cleared(count)
 signal piece_dropped(drop_height)
+signal block_placed(positions)  # 新增信号：方块放置位置
 
 var grid_manager: Node2D # 引用 GridManager
 var touch_input_handler: Node # 触摸输入处理器
@@ -34,6 +34,9 @@ var down_hold_timer := 0.0
 const INITIAL_DELAY = 0.1 # 初始延迟
 
 var soft_drop_height = 0
+var is_hard_dropping = false # 标记是否正在执行硬降动画
+var hard_drop_target_y = 0 # 硬降的目标Y坐标
+var hard_drop_speed = 180.0 # 硬降的移动速度 (格子/秒)
 
 func _ready():
 	randomize()
@@ -81,11 +84,31 @@ func update_visual_position():
 			continue
 		# 将 grid 坐标转换为实际像素位置
 		var index = min(i, local_blocks.size() - 1)
-		block.position = (grid_position + local_blocks[index]) * CELL_SIZE
+		var grid_coords = grid_position + local_blocks[index]
+		block.position = grid_coords * CELL_SIZE
+		
+		# 设置方块可见性 - 超出顶部边界的方块不可见
+		block.visible = grid_coords.y >= 0
 
 # 每帧更新
 func _process(delta):
 	last_fall_time += delta
+	
+	# 处理硬降动画
+	if is_hard_dropping:
+		var step = hard_drop_speed * delta # 计算本帧应移动的格子数
+		# 如果接近目标或已达到目标，完成硬降
+		if abs(grid_position.y - hard_drop_target_y) <= step:
+			var drop_height = hard_drop_target_y - grid_position.y
+			grid_position.y = hard_drop_target_y
+			update_visual_position()
+			is_hard_dropping = false
+			finalize_hard_drop(int(drop_height))
+		else:
+			# 继续向目标移动
+			grid_position.y += step
+			update_visual_position()
+		return # 硬降过程中不处理其他输入
 	
 	# 左移动
 	if Input.is_action_just_pressed("ui_left"):
@@ -225,9 +248,14 @@ func can_move_to(offset: Vector2) -> bool:
 # 锁定方块
 func lock_tetromino():
 	# 将方块存入网格
+	var placed_positions = []  # 存储放置的方块位置
 	for local in local_blocks:
 		var cell = grid_position + local
 		grid_manager.store_block(cell.x, cell.y, 1)
+		placed_positions.append(cell)  # 记录放置的位置
+	
+	# 发出方块放置位置的信号
+	emit_signal("block_placed", placed_positions)
 	
 	# 检查是否有满行并计算消除的行数
 	var cleared_lines = 0
@@ -241,7 +269,6 @@ func lock_tetromino():
 	emit_signal("piece_dropped", soft_drop_height)
 	soft_drop_height = 0 # 重置下落高度
 
-	emit_signal("tetromino_locked")
 	check_game_over()
 
 func check_game_over():
@@ -254,15 +281,25 @@ func check_game_over():
 
 # 硬降（直接落到底部）
 func hard_drop():
-	var drop_height = 0
+	var drop_height = calculate_drop_height()
 	
-	# 找出可以下落的最大距离
-	while can_move_to(Vector2(0, 1)):
-		grid_position.y += 1
-		drop_height += 1
-	
-	update_visual_position()
-	
+	if drop_height > 0:
+		# 设置硬降动画状态
+		is_hard_dropping = true
+		hard_drop_target_y = grid_position.y + drop_height
+	else:
+		# 如果不能下落，直接锁定
+		finalize_hard_drop(0)
+
+# 计算可下落的最大高度
+func calculate_drop_height() -> int:
+	var height = 0
+	while can_move_to(Vector2(0, height + 1)):
+		height += 1
+	return height
+
+# 完成硬降并锁定方块
+func finalize_hard_drop(drop_height: int):
 	# 发出下落高度信号
 	emit_signal("piece_dropped", drop_height * 2) # 硬降得分翻倍
 	

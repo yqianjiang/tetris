@@ -15,9 +15,9 @@ var tap_threshold = 10 # 点击的最大移动距离
 var touch_start_time = 0 # 触摸开始时间
 var tap_time_threshold = 0.2 # 点击的最大持续时间(秒)
 var last_horizontal_move_time = 0 # 上次水平移动的时间
-var horizontal_move_delay = 0.1 # 水平移动的间隔时间(秒)
+var horizontal_move_delay = 0.15 # 水平移动的间隔时间(秒)，从0.1增加到0.15
 var last_horizontal_position = Vector2.ZERO # 上次水平移动时的位置
-var horizontal_move_threshold = 10 # 每次水平移动的最小阈值
+var horizontal_move_threshold = 15 # 每次水平移动的最小阈值，从10增加到15
 
 # 状态控制变量
 var last_move_direction = Vector2.ZERO
@@ -32,8 +32,8 @@ var last_time = 0.0 # 上一次记录的时间
 var gesture_velocity = Vector2.ZERO # 当前手势速度
 var gesture_speeds = [] # 记录最近的手势速度
 var max_speed_records = 5 # 最多记录的速度数量
-var min_speed_threshold = 50.0 # 最小速度阈值（像素/秒）
-var max_speed_threshold = 800.0 # 最大速度阈值（像素/秒）
+var min_speed_threshold = 100.0 # 最小速度阈值（像素/秒），从50增加到100
+var max_speed_threshold = 1000.0 # 最大速度阈值（像素/秒），从800增加到1000
 
 func _ready():
     set_process_input(true)
@@ -145,7 +145,7 @@ func _handle_touch(event):
 func _handle_drag(event):
     var current_time = Time.get_ticks_msec() / 1000.0
     var drag_direction = event.position - touch_start_position
-    var speed_factor = get_speed_factor() # 获取速度因子
+    var speed_factor = get_speed_factor() * 0.7 # 减少速度因子的整体影响
     
     # 首先检查是否已经处于向下滑动状态
     if is_swiping_down:
@@ -196,13 +196,13 @@ func _handle_drag(event):
         
         # 长时间拖动时逐渐减少延迟，提升连续移动速度
         if current_time - touch_start_time > 0.5:
-            move_delay *= 0.7
+            move_delay *= 0.8 # 从0.7增加到0.8，减少延迟减少的幅度
         
         # 根据手势速度进一步调整延迟
-        move_delay *= (1.0 - speed_factor * 0.6)
+        move_delay *= (1.0 - speed_factor * 0.4) # 从0.6减少到0.4，减少速度对延迟的影响
         
         # 根据手势速度调整移动阈值
-        var adjusted_threshold = horizontal_move_threshold * (1.0 - speed_factor * 0.5)
+        var adjusted_threshold = horizontal_move_threshold * (1.0 - speed_factor * 0.3) # 从0.5减少到0.3
         
         if current_time - last_horizontal_move_time > move_delay and horizontal_diff > adjusted_threshold:
             var new_direction = 1 if event.position.x > last_horizontal_position.x else -1
@@ -212,8 +212,8 @@ func _handle_drag(event):
             if last_direction != new_direction or horizontal_diff > adjusted_threshold * 1.5:
                 # 根据速度决定是否进行多次移动
                 var move_count = 1
-                if speed_factor > 0.5:
-                    move_count += int(speed_factor * 2) # 最多可能增加2次移动
+                if speed_factor > 0.7: # 提高触发多次移动的阈值，从0.5提高到0.7
+                    move_count += int(speed_factor * 1.5) # 最多可能增加1次移动，从2减少到1.5
                 
                 for i in range(move_count):
                     if new_direction > 0:
@@ -231,10 +231,10 @@ func _handle_drag(event):
 func handle_swipe(end_position):
     var swipe_direction = end_position - touch_start_position
     var swipe_distance = swipe_direction.length()
-    var speed_factor = get_speed_factor() # 获取速度因子
+    var speed_factor = get_speed_factor() * 0.7 # 减少速度因子的整体影响
     
     # 太短的滑动不处理，避免误触
-    if (swipe_distance < swipe_threshold * 0.8):
+    if (swipe_distance < swipe_threshold * 0.9): # 从0.8增加到0.9，增加触发滑动的难度
         # 检查是否为点击操作
         var touch_duration = (Time.get_ticks_msec() / 1000.0) - touch_start_time
         if swipe_distance < tap_threshold and touch_duration < tap_time_threshold:
@@ -243,7 +243,7 @@ func handle_swipe(end_position):
         return
     
     # 使用辅助函数处理滑动方向和操作，传入速度因子
-    process_swipe_direction(swipe_direction, speed_factor)
+    process_swipe_direction(swipe_direction, speed_factor * 0.7) # 减少速度因子的整体影响
 
 # 处理滑动方向并执行相应操作
 func process_swipe_direction(direction, speed_factor):
@@ -263,8 +263,8 @@ func process_swipe_direction(direction, speed_factor):
     elif is_primarily_horizontal and abs(direction.x) > swipe_threshold:
         # 根据速度决定移动次数
         var move_count = 1
-        if speed_factor > 0.4:
-            move_count += int(speed_factor * 3) # 最多可能增加3次移动
+        if speed_factor > 0.6: # 从0.4提高到0.6
+            move_count += int(speed_factor * 2) # 从3减少到2，减少一次可能的额外移动次数
         
         for i in range(move_count):
             if direction.x > 0:
@@ -275,13 +275,13 @@ func process_swipe_direction(direction, speed_factor):
     # 垂直向下滑动且超过阈值
     elif direction.y > swipe_threshold and is_primarily_vertical:
         # 检查是否应该执行硬降落（快速下落）
-        if speed_factor > 0.7 or direction.y > swipe_threshold * 3:
+        if speed_factor > 0.8 or direction.y > swipe_threshold * 3: # 从0.7提高到0.8
             emit_signal("hard_drop")
         else:
             # 否则根据滑动距离和速度决定下落次数
             var base_distance = int(direction.y / swipe_threshold)
-            var speed_bonus = int(speed_factor * 2)
-            var move_count = min(base_distance + speed_bonus, 5) # 最多5次，避免过度下落
+            var speed_bonus = int(speed_factor * 1.5) # 从2减少到1.5
+            var move_count = min(base_distance + speed_bonus, 4) # 从5减少到4，减少最大下落次数
             
             for i in range(move_count):
                 emit_signal("move_down")

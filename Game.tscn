@@ -10,7 +10,7 @@
 [ext_resource type="Theme" uid="uid://4dhs5hvwry2w" path="res://theme.tres" id="7_81wak"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4oul"]
-bg_color = Color(0.129515, 0.173106, 0.240559, 0.678431)
+bg_color = Color(0.0996307, 0.136751, 0.194121, 0.937255)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_right = 16
@@ -28,12 +28,14 @@ position = Vector2(621, 975)
 texture = ExtResource("2_h0rl6")
 
 [node name="Control" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="TouchPanel" type="ColorRect" parent="Control"]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 19.025
@@ -140,7 +142,10 @@ alignment = 1
 
 [node name="Title" type="Label" parent="GameManager/UI/GameMenu/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+size_flags_vertical = 6
+theme_override_colors/font_color = Color(0.556863, 0.627451, 0.721569, 1)
+theme_override_colors/font_outline_color = Color(0.556863, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 72
 text = "Tetris"
 horizontal_alignment = 1
 
@@ -151,6 +156,8 @@ alignment = 1
 
 [node name="Label" type="Label" parent="GameManager/UI/GameMenu/VBoxContainer/LevelSelector"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.556863, 0.627451, 0.721569, 1)
+theme_override_colors/font_outline_color = Color(0.556863, 0.627451, 0.721569, 1)
 text = "level: "
 
 [node name="LevelOption" type="OptionButton" parent="GameManager/UI/GameMenu/VBoxContainer/LevelSelector"]
