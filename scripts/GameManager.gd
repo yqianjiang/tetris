@@ -31,6 +31,9 @@ var game_state = GameState.MENU
 # 添加变量来存储下一个方块的形状索引
 var next_shape_index = 0
 
+# 添加7-bag系统变量
+var tetromino_bag = []
+
 func _ready():
 	# 初始化第一个下一个方块形状
 	generate_next_shape()
@@ -108,9 +111,23 @@ func start_game():
 
 # 生成下一个方块的形状
 func generate_next_shape():
-	randomize()
-	next_shape_index = randi() % GameConstants.TETROMINO_SHAPES_PREVIEW.size()
+	# 如果bag为空，则重新填充
+	if tetromino_bag.is_empty():
+		refill_tetromino_bag()
+	
+	# 从bag中取出一个形状
+	next_shape_index = tetromino_bag.pop_front()
 	update_next_piece_preview()
+
+# 使用7-bag算法重新填充方块袋
+func refill_tetromino_bag():
+	# 创建包含0到6的数组（对应7种俄罗斯方块）
+	tetromino_bag = []
+	for i in range(GameConstants.TETROMINO_SHAPES_PREVIEW.size()):
+		tetromino_bag.append(i)
+	
+	# 打乱数组
+	tetromino_bag.shuffle()
 
 # 更新下一个方块的预览显示
 func update_next_piece_preview():
@@ -300,13 +317,13 @@ func _on_lines_cleared(count):
 	# 根据消除的行数计算得分，并乘以当前等级
 	var line_score = 0
 	match count:
-		1: line_score = 100
-		2: line_score = 300
-		3: line_score = 700
-		4: line_score = 1500
+		1: line_score = 40
+		2: line_score = 100
+		3: line_score = 300
+		4: line_score = 1200
 	
 	# 得分乘以当前等级
-	score += line_score * (level + 1)
+	score += line_score * level
 	update_score_display()
 
 # 处理方块下落得分

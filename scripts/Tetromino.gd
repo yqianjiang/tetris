@@ -338,11 +338,19 @@ func set_level(level):
 
 # 根据等级调整下落速度
 func adjust_fall_time():
-	var initial_fall_time = 1.0 # 初始下落时间
-	var min_fall_time = 0.1 # 最快下落时间
-
-	var new_fall_time = initial_fall_time / (1 + current_level * 0.3)
-	fall_time = max(min_fall_time, new_fall_time)
+	var exponent = current_level - 1
+	# 特殊情况：等级19及以上固定为最高重力20
+	if current_level >= 19:
+		exponent = 18
+	
+	# 应用Tetris Worlds重力公式
+	# 时间 = (0.8-((等级-1)*0.007))^(等级-1)
+	var base = 0.8 - (exponent * 0.007)
+	fall_time = pow(base, exponent)
+	
+	# 防止出现无效值
+	if fall_time <= 0 or is_inf(fall_time):
+		fall_time = 0.05  # 设置一个默认的合理值
 
 # 设置方块形状
 func set_shape(shape_index: int):
