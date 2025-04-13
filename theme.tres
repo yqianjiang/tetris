@@ -1,12 +1,17 @@
-[gd_resource type="Theme" load_steps=9 format=3 uid="uid://4dhs5hvwry2w"]
+[gd_resource type="Theme" load_steps=11 format=3 uid="uid://4dhs5hvwry2w"]
 
-[ext_resource type="FontFile" uid="uid://dhdig0bwan41l" path="res://assets/fonts/思源宋体 Regular字体.ttf" id="1_x54js"]
+[ext_resource type="FontFile" uid="uid://dyedlkbrv4qfj" path="res://assets/fonts/思源宋体 Regular字体.ttf" id="1_i7e2h"]
+[ext_resource type="FontFile" uid="uid://cvt5vennbtogs" path="res://assets/fonts/Roboto-Regular.ttf" id="1_x54js"]
+
+[sub_resource type="SystemFont" id="SystemFont_s1hge"]
+fallbacks = Array[Font]([ExtResource("1_i7e2h")])
+font_names = PackedStringArray("Arial")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kw5o4"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.239216, 0.294118, 0.376471, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
@@ -15,10 +20,10 @@ corner_radius_bottom_left = 16
 corner_detail = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5m0kl"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.239216, 0.294118, 0.376471, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
@@ -27,10 +32,10 @@ corner_radius_bottom_left = 16
 corner_detail = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4cqgc"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.196078, 0.254902, 0.345098, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
@@ -39,10 +44,10 @@ corner_radius_bottom_left = 16
 corner_detail = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqa7p"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.239216, 0.294118, 0.376471, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
@@ -51,10 +56,10 @@ corner_radius_bottom_left = 16
 corner_detail = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rkv7a"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.196078, 0.254902, 0.345098, 1)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
@@ -82,7 +87,8 @@ shadow_size = 5
 default_font = ExtResource("1_x54js")
 default_font_size = 32
 Button/constants/h_separation = 40
-Button/font_sizes/font_size = 38
+Button/font_sizes/font_size = 48
+Button/fonts/font = SubResource("SystemFont_s1hge")
 Button/styles/focus = SubResource("StyleBoxFlat_kw5o4")
 Button/styles/hover = SubResource("StyleBoxFlat_5m0kl")
 Button/styles/normal = SubResource("StyleBoxFlat_4cqgc")
@@ -105,4 +111,4 @@ PopupMenu/constants/item_start_padding = 20
 PopupMenu/constants/v_separation = 16
 PopupMenu/styles/hover = SubResource("StyleBoxFlat_be8i0")
 PopupMenu/styles/panel = SubResource("StyleBoxFlat_fdr7q")
-VBoxContainer/constants/separation = 38
+VBoxContainer/constants/separation = 44

@@ -1,8 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://nhee58tvd4ck"]
+[gd_scene load_steps=8 format=3 uid="uid://nhee58tvd4ck"]
 
 [ext_resource type="Script" path="res://scripts/GameManager.gd" id="1_f63gn"]
 [ext_resource type="Texture2D" uid="uid://da0o21duxnlvc" path="res://assets/web_theme/bg_en.png" id="1_woq6b"]
-[ext_resource type="Texture2D" uid="uid://c8fo5ftncwq7g" path="res://assets/web_theme/bg.png" id="2_h0rl6"]
 [ext_resource type="PackedScene" uid="uid://101qen05c1pi" path="res://Tetromino.tscn" id="2_y4ci5"]
 [ext_resource type="PackedScene" uid="uid://2723frmpolwu" path="res://GridRenderer.tscn" id="3_k6q5g"]
 [ext_resource type="Script" path="res://scripts/GridManager.gd" id="4_v4u0l"]
@@ -20,11 +19,6 @@ corner_radius_bottom_left = 16
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(621, 975)
 texture = ExtResource("1_woq6b")
-
-[node name="Sprite2D2" type="Sprite2D" parent="."]
-visible = false
-position = Vector2(621, 975)
-texture = ExtResource("2_h0rl6")
 
 [node name="GameManager" type="Node2D" parent="."]
 position = Vector2(324, 154)
@@ -81,7 +75,6 @@ layout_mode = 0
 offset_top = 1053.0
 offset_right = 202.0
 offset_bottom = 1128.0
-theme_override_font_sizes/font_size = 38
 text = "Pause"
 
 [node name="GameMenu" type="Panel" parent="GameManager/UI"]
@@ -133,11 +126,13 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.556863, 0.627451, 0.721569, 1)
 theme_override_colors/font_outline_color = Color(0.556863, 0.627451, 0.721569, 1)
+theme_override_font_sizes/font_size = 48
 text = "level: "
 
 [node name="LevelOption" type="OptionButton" parent="GameManager/UI/GameMenu/VBoxContainer/LevelSelector"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 48
 
 [node name="StartButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
 layout_mode = 2
@@ -152,5 +147,6 @@ layout_mode = 2
 text = "Restart"
 
 [node name="ExitButton" type="Button" parent="GameManager/UI/GameMenu/VBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Exit"

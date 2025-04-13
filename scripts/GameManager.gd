@@ -79,10 +79,6 @@ func setup_game_menu():
 	var restart_button = vbox.get_node_or_null("RestartButton")
 	restart_button.pressed.connect(restart_game)
 	
-	# 连接退出按钮
-	var exit_button = vbox.get_node_or_null("ExitButton") 
-	exit_button.pressed.connect(exit_game)
-	
 	# 添加等级选择器
 	var level_selector = vbox.get_node_or_null("LevelSelector")
 	if level_selector:		
@@ -198,10 +194,6 @@ func restart_game():
 	# 短暂延迟后开始游戏，确保所有触摸状态已重置
 	await get_tree().create_timer(0.1).timeout
 	start_game()
-
-# 退出游戏
-func exit_game():
-	get_tree().quit()
 
 # 统一显示游戏菜单的函数
 func show_game_menu():

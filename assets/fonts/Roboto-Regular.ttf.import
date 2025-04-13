@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://dyedlkbrv4qfj"
-path="res://.godot/imported/思源宋体 Regular字体.ttf-d77cc0ea28a16ba1ea5124d78107b93f.fontdata"
+uid="uid://cvt5vennbtogs"
+path="res://.godot/imported/Roboto-Regular.ttf-e67097a08cc051e6b179dbaab401b2bc.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/思源宋体 Regular字体.ttf"
-dest_files=["res://.godot/imported/思源宋体 Regular字体.ttf-d77cc0ea28a16ba1ea5124d78107b93f.fontdata"]
+source_file="res://assets/fonts/Roboto-Regular.ttf"
+dest_files=["res://.godot/imported/Roboto-Regular.ttf-e67097a08cc051e6b179dbaab401b2bc.fontdata"]
 
 [params]
 

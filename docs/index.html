@@ -88,6 +88,7 @@
 
         <div id="loading-screen">
             <img src="index.180x180.png" />
+            <h1 style="color: #00D3F2; margin: 0 0 20px 0; font-family: Arial, sans-serif;">Tetris</h1>
             <div class="progress-wrapper">
                 <div id="progress-bar"></div>
             </div>
@@ -117,7 +118,7 @@
         
         <script src="index.js"></script>
         <script>
-            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":17507520,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
+            var engine = new Engine({"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":188256,"index.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[],"serviceWorker":"index.service.worker.js"});
             engine.startGame({
                 onProgress: function(current, total) {
                     var progress = (current / total) * 100;
